@@ -7,101 +7,340 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>تأكيد حضور الماتش</title>
+    <title>⚽ تأكيد حضور الماتش</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-            body {
-                background-color: #121212;
-                color: #ffffff;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+        * { box-sizing: border-box; }
 
-            .card {
-                background-color: #1e1e1e;
-                border: 1px solid #333;
-                border-radius: 16px;
-            }
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
 
-            .option-card {
-                cursor: pointer;
-                user-select: none;
-                transition: all 0.2s ease-in-out;
-            }
+        .main-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 35px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+        }
 
-                .option-card:hover {
-                    border-color: #0d6efd !important;
-                    background-color: #2b2b2b !important;
-                }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-                .option-card:has(input:checked) {
-                    border-color: #0d6efd !important;
-                    background-color: #1a2736 !important;
-                }
+        .logo-area .ball-icon {
+            font-size: 56px;
+            animation: bounce 2s infinite;
+        }
 
-            .form-control::placeholder {
-                color: #888;
-            }
+        /* تم مضاعفة الـ  هنا لمنع تداخل Razor مع CSS */
+        @@keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-area h1 {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 10px 0 5px;
+        }
+
+        .logo-area p {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+        }
+
+        .form-control-custom {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: #fff;
+            padding: 14px 16px;
+            width: 100%;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-control-custom:focus {
+            border-color: #7c3aed;
+            background: rgba(124, 58, 237, 0.1);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+        }
+
+        .form-control-custom::placeholder { color: rgba(255,255,255,0.35); }
+
+        .form-label-custom {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .photo-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .photo-preview {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(124, 58, 237, 0.3);
+            border: 2px dashed rgba(124, 58, 237, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .photo-preview:hover { border-color: #7c3aed; background: rgba(124, 58, 237, 0.4); }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-preview .photo-icon {
+            color: rgba(124, 58, 237, 0.8);
+            font-size: 1.5rem;
+        }
+
+        .photo-upload-info h6 {
+            color: #fff;
+            font-size: 0.9rem;
+            margin: 0 0 4px;
+        }
+
+        .photo-upload-info p {
+            color: rgba(255,255,255,0.45);
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .status-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+        .status-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: rgba(255,255,255,0.03);
+            user-select: none;
+        }
+
+        .status-option:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.25);
+        }
+
+        .status-option input[type="radio"] { display: none; }
+
+        .status-option.selected-going { border-color: #22c55e; background: rgba(34,197,94,0.12); }
+        .status-option.selected-notgoing { border-color: #ef4444; background: rgba(239,68,68,0.12); }
+        .status-option.selected-maybe { border-color: #f59e0b; background: rgba(245,158,11,0.12); }
+
+        .status-icon-text { display: flex; align-items: center; gap: 10px; }
+        .status-icon-text .icon { font-size: 1.4rem; }
+        .status-icon-text .label { color: #fff; font-weight: 700; font-size: 1rem; }
+
+        .check-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .status-option.selected-going .check-circle { border-color: #22c55e; background: #22c55e; }
+        .status-option.selected-notgoing .check-circle { border-color: #ef4444; background: #ef4444; }
+        .status-option.selected-maybe .check-circle { border-color: #f59e0b; background: #f59e0b; }
+
+        .check-circle i { color: #fff; font-size: 0.75rem; display: none; }
+        .status-option[class*="selected-"] .check-circle i { display: block; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+        }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .admin-link a {
+            color: rgba(255,255,255,0.35);
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        .info-badge {
+            background: rgba(124, 58, 237, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.82rem;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
+    <div class="main-card">
+        <div class="logo-area">
+            <div class="ball-icon">⚽</div>
+            <h1>تأكيد الحضور</h1>
+            <p>سجّل موقفك وانضم للغرفة مع الشباب</p>
+        </div>
 
-    <div class="container my-5" style="max-width: 480px;">
-        <div class="card shadow-lg p-4 text-center">
-            <div class="text-end mb-2">
-                <a asp-controller="Home" asp-action="Login" class="btn btn-outline-secondary btn-sm text-white">🔐 أدمن</a>
+        <div class="info-badge">
+            <i class="fas fa-info-circle" style="color:#a855f7"></i>
+            رقم التليفون هو حسابك، تقدر تعدّل موقفك في أي وقت.
+        </div>
+
+        <form asp-controller="Home" asp-action="Submit" method="post" enctype="multipart/form-data">
+            <div class="photo-upload-area">
+                <div class="photo-preview" onclick="document.getElementById('profilePhoto').click()">
+                    <div class="photo-icon" id="photoIcon"><i class="fas fa-camera"></i></div>
+                    <img id="photoPreviewImg" src="" alt="" style="display:none;" />
+                </div>
+                <div class="photo-upload-info">
+                    <h6>صورة شخصية <span style="color:rgba(255,255,255,0.35);font-size:0.75rem;">(اختياري)</span></h6>
+                    <p>اضغط على الدايرة لاختيار صورتك</p>
+                </div>
+                <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" style="display:none;" onchange="previewPhoto(this)" />
             </div>
 
-            <h2 class="fw-bold mb-2 text-white">⚽ تأكيد حضور الماتش</h2>
-            <p class="text-light opacity-75 mb-2">اكتب رقم تليفونك واسمك لتسجيل أو تعديل موقفك!</p>
-            <p class="text-info small mb-4">💡 رقم التليفون هو حسابك لتعديل موقفك في أي وقت.</p>
+            <div class="mb-3">
+                <label class="form-label-custom">📱 رقم الموبايل</label>
+                <input type="tel" name="PhoneNumber" class="form-control-custom" placeholder="01xxxxxxxxx" required />
+            </div>
 
-            <form asp-controller="Home" asp-action="Submit" method="post">
-                <!-- رقم التليفون -->
-                <div class="mb-3 text-start">
-                    <label class="form-label fw-semibold text-white">رقم الموبايل:</label>
-                    <input type="tel" name="PhoneNumber" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="01xxxxxxxxx" required />
-                </div>
+            <div class="mb-3">
+                <label class="form-label-custom">👤 اسمك بالكامل</label>
+                <input type="text" name="FriendName" class="form-control-custom" placeholder="ادخل اسمك هنا..." required />
+            </div>
 
-                <!-- اسم الصديق -->
-                <div class="mb-3 text-start">
-                    <label class="form-label fw-semibold text-white">اسمك بالكامل:</label>
-                    <input type="text" name="FriendName" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="ادخل اسمك هنا..." required />
-                </div>
-
-                <!-- تحديد الموقف -->
-                <div class="mb-4 text-start">
-                    <label class="form-label fw-semibold text-white mb-3">جايب ولا لا؟</label>
-
-                    <label class="option-card p-3 border border-secondary rounded mb-2 bg-dark d-flex align-items-center justify-content-between w-100" for="status1">
-                        <span class="fw-bold text-success mb-0">✅ جاي أكيد</span>
-                        <input class="form-check-input ms-2" type="radio" name="Status" id="status1" value="جاي أكيد" checked />
+            <div style="margin-bottom:20px;">
+                <p class="section-label">جايب ولا لا؟</p>
+                <div class="status-options">
+                    <label class="status-option selected-going" onclick="selectStatus(this, 'selected-going')">
+                        <div class="status-icon-text">
+                            <span class="icon">✅</span>
+                            <span class="label">جاي أكيد</span>
+                        </div>
+                        <div class="check-circle"><i class="fas fa-check"></i></div>
+                        <input type="radio" name="Status" value="جاي أكيد" checked />
                     </label>
 
-                    <label class="option-card p-3 border border-secondary rounded mb-2 bg-dark d-flex align-items-center justify-content-between w-100" for="status2">
-                        <span class="fw-bold text-danger mb-0">❌ مش جاي</span>
-                        <input class="form-check-input ms-2" type="radio" name="Status" id="status2" value="مش جاي" />
+                    <label class="status-option" onclick="selectStatus(this, 'selected-notgoing')">
+                        <div class="status-icon-text">
+                            <span class="icon">❌</span>
+                            <span class="label">مش جاي</span>
+                        </div>
+                        <div class="check-circle"><i class="fas fa-check"></i></div>
+                        <input type="radio" name="Status" value="مش جاي" />
                     </label>
 
-                    <label class="option-card p-3 border border-secondary rounded bg-dark d-flex align-items-center justify-content-between w-100" for="status3">
-                        <span class="fw-bold text-warning mb-0">❓ احتمال أجي</span>
-                        <input class="form-check-input ms-2" type="radio" name="Status" id="status3" value="احتمال أجي" />
+                    <label class="status-option" onclick="selectStatus(this, 'selected-maybe')">
+                        <div class="status-icon-text">
+                            <span class="icon">❓</span>
+                            <span class="label">احتمال أجي</span>
+                        </div>
+                        <div class="check-circle"><i class="fas fa-check"></i></div>
+                        <input type="radio" name="Status" value="احتمال أجي" />
                     </label>
                 </div>
+            </div>
 
-                <!-- ملاحظة اختيارية -->
-                <div class="mb-4 text-start">
-                    <label class="form-label fw-semibold text-white">ملاحظة (اختياري):</label>
-                    <input type="text" name="Note" class="form-control bg-dark text-white border-secondary" placeholder="مثلاً: هتأخر 10 دقايق..." />
-                </div>
+            <div class="mb-3">
+                <label class="form-label-custom">💬 ملاحظة <span style="color:rgba(255,255,255,0.3);font-weight:400;">(اختياري)</span></label>
+                <input type="text" name="Note" class="form-control-custom" placeholder="مثلاً: هتأخر 10 دقايق..." />
+            </div>
 
-                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">تأكيد الإجابة 🚀</button>
-            </form>
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane me-2"></i> تأكيد وانضم للغرفة
+            </button>
+        </form>
+
+        <div class="admin-link">
+            <a asp-controller="Home" asp-action="Login"><i class="fas fa-lock me-1"></i>دخول الأدمن</a>
         </div>
     </div>
 
+    <script>
+        function selectStatus(el, cls) {
+            document.querySelectorAll('.status-option').forEach(o => {
+                o.classList.remove('selected-going', 'selected-notgoing', 'selected-maybe');
+            });
+            el.classList.add(cls);
+            el.querySelector('input[type="radio"]').checked = true;
+        }
+
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('photoIcon').style.display = 'none';
+                    const img = document.getElementById('photoPreviewImg');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 </body>
 </html>

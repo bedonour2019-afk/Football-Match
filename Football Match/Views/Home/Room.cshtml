@@ -1,0 +1,379 @@
+﻿@model IEnumerable<Football_Match.Models.Attendance>
+@{
+    Layout = null;
+    var messages = ViewBag.Messages as IEnumerable<Football_Match.Models.ChatMessage>;
+    int currentId = ViewBag.CurrentAttendanceId ?? 0;
+    var goingList = Model.Where(m => m.Status == "جاي أكيد").ToList();
+    var notGoingList = Model.Where(m => m.Status == "مش جاي").ToList();
+    var maybeList = Model.Where(m => m.Status == "احتمال أجي").ToList();
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚽ غرفة الماتش</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0d0d1a; color: #fff; font-family: "Segoe UI", Tahoma, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .room-header { background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .room-header .title { font-size: 1.2rem; font-weight: 800; }
+        .room-header .subtitle { color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+        .back-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: rgba(255,255,255,0.7); padding: 8px 16px; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; }
+        .back-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+        .room-body { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 270px; background: rgba(255,255,255,0.02); border-left: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+        .sidebar-header { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .sidebar-header h6 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); }
+        .stat-chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .chip { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .chip-green { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .chip-red { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .chip-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .sidebar-list { overflow-y: auto; flex: 1; padding: 8px; }
+        .sidebar-list::-webkit-scrollbar { width: 3px; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.3); padding: 10px 8px 4px; }
+        .attendee-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; transition: background 0.2s; margin-bottom: 2px; }
+        .attendee-item:hover { background: rgba(255,255,255,0.04); }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .avatar-ph { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 700; flex-shrink: 0; }
+        .attendee-name { font-size: 0.88rem; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .messages-container { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .messages-container::-webkit-scrollbar { width: 4px; }
+        .messages-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .message-wrapper { display: flex; align-items: flex-end; gap: 8px; max-width: 72%; }
+        .message-wrapper.mine { margin-left: auto; flex-direction: row-reverse; }
+        .msg-av { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .msg-av-ph { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .msg-content-wrap { display: flex; flex-direction: column; }
+        .msg-sender { font-size: 0.72rem; color: rgba(255,255,255,0.45); margin-bottom: 3px; padding: 0 4px; }
+        .msg-bubble { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px 16px 16px 4px; padding: 10px 14px; font-size: 0.92rem; line-height: 1.5; word-break: break-word; position: relative; }
+        .mine .msg-bubble { background: linear-gradient(135deg,rgba(124,58,237,0.4),rgba(168,85,247,0.4)); border-color: rgba(124,58,237,0.3); border-radius: 16px 16px 4px 16px; }
+        .msg-bubble img { max-width: 240px; max-height: 200px; border-radius: 10px; display: block; cursor: pointer; }
+        .msg-bubble video { max-width: 240px; border-radius: 10px; display: block; }
+        .msg-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 0 4px; }
+        .msg-time { font-size: 0.68rem; color: rgba(255,255,255,0.3); }
+        .del-btn { background: none; border: none; color: rgba(255,255,255,0.2); font-size: 0.7rem; cursor: pointer; padding: 0; transition: color 0.2s; display: none; }
+        .mine:hover .del-btn { display: inline; }
+        .del-btn:hover { color: #ef4444; }
+        .reactions-bar { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; padding: 0 2px; }
+        .reaction-chip { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 2px 8px; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 3px; }
+        .reaction-chip:hover { background: rgba(255,255,255,0.15); }
+        .react-buttons { display: flex; gap: 4px; margin-top: 4px; padding: 0 2px; opacity: 0; transition: opacity 0.2s; }
+        .message-wrapper:hover .react-buttons { opacity: 1; }
+        .react-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2px 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+        .react-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.15); }
+        .deleted-msg { color: rgba(255,255,255,0.25); font-style: italic; font-size: 0.85rem; }
+        .chat-input-area { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.02); flex-shrink: 0; }
+        .media-preview-bar { display: none; align-items: center; gap: 10px; padding: 8px 0; margin-bottom: 8px; }
+        .media-preview-bar.show { display: flex; }
+        .media-thumb { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+        .media-cancel { background: rgba(239,68,68,0.2); border: none; border-radius: 50%; width: 24px; height: 24px; color: #ef4444; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
+        .input-row { display: flex; gap: 10px; align-items: flex-end; }
+        .action-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; width: 40px; height: 40px; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s; flex-shrink: 0; }
+        .action-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+        .msg-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #fff; padding: 10px 16px; font-size: 0.92rem; resize: none; outline: none; min-height: 42px; max-height: 120px; transition: border-color 0.2s; }
+        .msg-input:focus { border-color: rgba(124,58,237,0.5); }
+        .msg-input::placeholder { color: rgba(255,255,255,0.25); }
+        .send-btn { background: linear-gradient(135deg,#7c3aed,#a855f7); border: none; border-radius: 10px; width: 44px; height: 44px; color: #fff; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .send-btn:hover { transform: scale(1.08); box-shadow: 0 4px 15px rgba(124,58,237,0.4); }
+        .emoji-picker { display: none; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(20,20,40,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 8px; }
+        .emoji-picker.show { display: flex; }
+        .emoji-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; border-radius: 8px; padding: 4px; transition: all 0.15s; }
+        .emoji-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
+        .not-logged { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 14px 18px; text-align: center; color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+        .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; }
+        .lightbox.show { display: flex; }
+        .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+        .lightbox-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 40px; height: 40px; color: #fff; font-size: 1.2rem; cursor: pointer; }
+        @@media (max-width: 680px) { .sidebar { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="room-header">
+        <div>
+            <div class="title">⚽ غرفة الماتش</div>
+            <div class="subtitle">@Model.Count() مسجّل &nbsp;|&nbsp; @goingList.Count جايين أكيد</div>
+        </div>
+        <a href="/" class="back-btn"><i class="fas fa-edit me-1"></i>تعديل موقفك</a>
+    </div>
+    <div class="room-body">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h6>قائمة الحضور</h6>
+                <div class="stat-chips">
+                    <span class="chip chip-green">✅ @goingList.Count</span>
+                    <span class="chip chip-red">❌ @notGoingList.Count</span>
+                    <span class="chip chip-yellow">❓ @maybeList.Count</span>
+                </div>
+            </div>
+            <div class="sidebar-list">
+                @foreach (var group in new[] {
+                    new { title = "جايين أكيد", list = goingList, bg = "rgba(34,197,94,0.2)", color = "#22c55e" },
+                    new { title = "احتمال", list = maybeList, bg = "rgba(245,158,11,0.2)", color = "#f59e0b" },
+                    new { title = "مش جايين", list = notGoingList, bg = "rgba(239,68,68,0.15)", color = "#ef4444" }
+                })
+                {
+                    if (group.list.Any())
+                    {
+                        <div class="section-title">@group.title</div>
+                        @foreach (var a in group.list)
+                        {
+                            <div class="attendee-item">
+                                @if (!string.IsNullOrEmpty(a.ProfilePicturePath))
+                                {
+                                    <img class="avatar" src="@a.ProfilePicturePath" alt="@a.FriendName" />
+                                }
+                                else
+                                {
+                                    <div class="avatar-ph" style="background:@group.bg;color:@group.color;">
+                                        @(a.FriendName.Length > 0 ? a.FriendName.Substring(0,1).ToUpper() : "?")
+                                    </div>
+                                }
+                                <span class="attendee-name">@a.FriendName</span>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
+        <div class="chat-area">
+            <div class="messages-container" id="messagesContainer">
+                @if (messages != null)
+                {
+                    @foreach (var msg in messages)
+                    {
+                        bool isMine = msg.AttendanceId == currentId;
+                        string sName = msg.Sender?.FriendName ?? "؟";
+                        string sPhoto = msg.Sender?.ProfilePicturePath ?? "";
+                        string sLetter = sName.Length > 0 ? sName.Substring(0,1).ToUpper() : "؟";
+                        <div class="message-wrapper @(isMine ? "mine" : "")" id="msg-@msg.Id" data-msg-id="@msg.Id">
+                            @if (!isMine)
+                            {
+                                if (!string.IsNullOrEmpty(sPhoto))
+                                { <img class="msg-av" src="@sPhoto" alt="@sName" /> }
+                                else
+                                { <div class="msg-av-ph" style="background:rgba(124,58,237,0.25);color:#a855f7;">@sLetter</div> }
+                            }
+                            <div class="msg-content-wrap">
+                                @if (!isMine) { <div class="msg-sender">@sName</div> }
+                                <div class="msg-bubble">
+                                    @if (!string.IsNullOrEmpty(msg.Content)) { <span>@msg.Content</span> }
+                                    @if (!string.IsNullOrEmpty(msg.MediaPath))
+                                    {
+                                        if (msg.MediaType == "image")
+                                        { <img src="@msg.MediaPath" alt="صورة" onclick="openLightbox('@msg.MediaPath')" /> }
+                                        else
+                                        { <video controls src="@msg.MediaPath"></video> }
+                                    }
+                                </div>
+                                <div class="reactions-bar" id="reactions-@msg.Id">
+                                    @foreach (var rg in msg.Reactions.GroupBy(r => r.ReactionType))
+                                    {
+                                        <span class="reaction-chip" onclick="sendReaction(@msg.Id,'@rg.Key')">@rg.Key <span>@rg.Count()</span></span>
+                                    }
+                                </div>
+                                <div class="react-buttons">
+                                    <button class="react-btn" onclick="sendReaction(@msg.Id,'😂')">😂</button>
+                                    <button class="react-btn" onclick="sendReaction(@msg.Id,'❤️')">❤️</button>
+                                    <button class="react-btn" onclick="sendReaction(@msg.Id,'😢')">😢</button>
+                                </div>
+                                <div class="msg-meta">
+                                    <span class="msg-time">@msg.SentAt.ToString("HH:mm")</span>
+                                    @if (isMine)
+                                    {
+                                        <button class="del-btn" onclick="deleteMessage(@msg.Id)" title="حذف"><i class="fas fa-trash"></i></button>
+                                    }
+                                </div>
+                            </div>
+                            @if (isMine)
+                            {
+                                if (!string.IsNullOrEmpty(sPhoto))
+                                { <img class="msg-av" src="@sPhoto" alt="@sName" /> }
+                                else
+                                { <div class="msg-av-ph" style="background:rgba(124,58,237,0.25);color:#a855f7;">@sLetter</div> }
+                            }
+                        </div>
+                    }
+                }
+            </div>
+            <div class="chat-input-area">
+                @if (currentId > 0)
+                {
+                    <div class="emoji-picker" id="emojiPicker">
+                        @foreach (var em in new[] {"😂","❤️","😢","👍","🔥","💪","⚽","🎉","😎","🤣","😍","👏","🙏","😤","😅","🤙","🥳","💯","🫡","🤝"})
+                        {
+                            <button class="emoji-btn" onclick="insertEmoji('@em')">@em</button>
+                        }
+                    </div>
+                    <div class="media-preview-bar" id="mediaPreviewBar">
+                        <img id="mediaThumb" class="media-thumb" src="" alt="" />
+                        <span id="mediaName" style="font-size:0.8rem;color:rgba(255,255,255,0.5);"></span>
+                        <button class="media-cancel" onclick="cancelMedia()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="input-row">
+                        <button class="action-btn" onclick="toggleEmoji()" title="إيموجي"><i class="far fa-smile"></i></button>
+                        <button class="action-btn" onclick="document.getElementById('mediaInput').click()" title="صورة/فيديو"><i class="fas fa-paperclip"></i></button>
+                        <textarea class="msg-input" id="msgInput" placeholder="اكتب رسالتك..." rows="1"
+                            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+                        <button class="send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                    <input type="file" id="mediaInput" accept="image/*,video/*" style="display:none;" onchange="handleMedia(this)" />
+                }
+                else
+                {
+                    <div class="not-logged">
+                        <i class="fas fa-lock me-2"></i>
+                        <a href="/" style="color:#a855f7;">سجّل موقفك أولاً</a> عشان تقدر تكتب في الشات
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox(event)"><i class="fas fa-times"></i></button>
+        <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()" />
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const currentId = @currentId;
+        let pendingMedia = null;
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start().catch(err => console.error("SignalR:", err));
+
+        connection.on("ReceiveMessage", msg => { appendMessage(msg); scrollBottom(); });
+        connection.on("MessageDeleted", id => {
+            const el = document.getElementById("msg-" + id);
+            if (el) {
+                el.querySelector(".msg-bubble").innerHTML = '<span class="deleted-msg"><i class="fas fa-ban me-1"></i>تم حذف هذه الرسالة</span>';
+                const rb = el.querySelector(".react-buttons"); if (rb) rb.remove();
+                const db = el.querySelector(".del-btn"); if (db) db.remove();
+            }
+        });
+        connection.on("ReactionUpdated", (id, counts) => {
+            const bar = document.getElementById("reactions-" + id);
+            if (!bar) return;
+            bar.innerHTML = "";
+            counts.forEach(r => {
+                const c = document.createElement("span");
+                c.className = "reaction-chip";
+                c.onclick = () => sendReaction(id, r.type);
+                c.innerHTML = r.type + " <span>" + r.count + "</span>";
+                bar.appendChild(c);
+            });
+        });
+
+        async function sendMsg() {
+            const inp = document.getElementById("msgInput");
+            const content = inp.value.trim();
+            if (!content && !pendingMedia) return;
+            if (currentId === 0) return;
+            let mPath = null, mType = null;
+            if (pendingMedia) {
+                try {
+                    const fd = new FormData();
+                    fd.append("file", pendingMedia.file);
+                    const res = await fetch("/Home/UploadMedia", { method: "POST", body: fd });
+                    if (res.ok) { const d = await res.json(); mPath = d.path; mType = d.type; }
+                } catch (e) { console.error(e); }
+                cancelMedia();
+            }
+            await connection.invoke("SendMessage", content, mPath, mType);
+            inp.value = "";
+            autoResize(inp);
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm("تحذف الرسالة دي؟")) return;
+            await connection.invoke("DeleteMessage", id);
+        }
+
+        async function sendReaction(id, type) {
+            if (currentId === 0) return;
+            await connection.invoke("AddReaction", id, type);
+        }
+
+        function appendMessage(msg) {
+            const isMine = msg.senderId === currentId;
+            const c = document.getElementById("messagesContainer");
+            const letter = (msg.senderName || "؟").charAt(0).toUpperCase();
+            const avHtml = msg.senderPhoto
+                ? `<img class="msg-av" src="${msg.senderPhoto}" alt="${msg.senderName}" />`
+                : `<div class="msg-av-ph" style="background:rgba(124,58,237,0.25);color:#a855f7;">${letter}</div>`;
+            let mediaHtml = "";
+            if (msg.mediaPath) {
+                mediaHtml = msg.mediaType === "image"
+                    ? `<img src="${msg.mediaPath}" alt="صورة" onclick="openLightbox('${msg.mediaPath}')" style="max-width:240px;max-height:200px;border-radius:10px;display:block;cursor:pointer;"/>`
+                    : `<video controls src="${msg.mediaPath}" style="max-width:240px;border-radius:10px;display:block;"></video>`;
+            }
+            const delBtn = isMine ? `<button class="del-btn" onclick="deleteMessage(${msg.id})"><i class="fas fa-trash"></i></button>` : "";
+            const reactBtns = `<div class="react-buttons">
+                <button class="react-btn" onclick="sendReaction(${msg.id},'😂')">😂</button>
+                <button class="react-btn" onclick="sendReaction(${msg.id},'❤️')">❤️</button>
+                <button class="react-btn" onclick="sendReaction(${msg.id},'😢')">😢</button>
+            </div>`;
+            const inner = `<div class="msg-content-wrap">
+                ${!isMine ? `<div class="msg-sender">${esc(msg.senderName)}</div>` : ""}
+                <div class="msg-bubble">${msg.content ? esc(msg.content) : ""}${mediaHtml}</div>
+                <div class="reactions-bar" id="reactions-${msg.id}"></div>
+                ${reactBtns}
+                <div class="msg-meta"><span class="msg-time">${msg.sentAt}</span>${delBtn}</div>
+            </div>`;
+            const div = document.createElement("div");
+            div.className = "message-wrapper" + (isMine ? " mine" : "");
+            div.id = "msg-" + msg.id;
+            div.dataset.msgId = msg.id;
+            div.innerHTML = isMine ? (inner + avHtml) : (avHtml + inner);
+            c.appendChild(div);
+        }
+
+        function esc(t) {
+            const d = document.createElement("div");
+            d.appendChild(document.createTextNode(t));
+            return d.innerHTML;
+        }
+
+        function scrollBottom() { const c = document.getElementById("messagesContainer"); c.scrollTop = c.scrollHeight; }
+        function toggleEmoji() { document.getElementById("emojiPicker").classList.toggle("show"); }
+        function insertEmoji(e) { const i = document.getElementById("msgInput"); i.value += e; i.focus(); document.getElementById("emojiPicker").classList.remove("show"); }
+        function handleMedia(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            pendingMedia = { file };
+            document.getElementById("mediaPreviewBar").classList.add("show");
+            document.getElementById("mediaName").textContent = file.name;
+            if (file.type.startsWith("image/")) {
+                const r = new FileReader();
+                r.onload = e => { document.getElementById("mediaThumb").src = e.target.result; };
+                r.readAsDataURL(file);
+            }
+        }
+        function cancelMedia() {
+            pendingMedia = null;
+            document.getElementById("mediaPreviewBar").classList.remove("show");
+            document.getElementById("mediaInput").value = "";
+            document.getElementById("mediaThumb").src = "";
+            document.getElementById("mediaName").textContent = "";
+        }
+        function handleKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+        function autoResize(el) { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 120) + "px"; }
+        function openLightbox(src) { document.getElementById("lightboxImg").src = src; document.getElementById("lightbox").classList.add("show"); }
+        function closeLightbox(e) { if (e) e.stopPropagation(); document.getElementById("lightbox").classList.remove("show"); }
+        document.addEventListener("click", e => {
+            const p = document.getElementById("emojiPicker");
+            if (p && p.classList.contains("show") && !e.target.closest(".emoji-picker") && !e.target.closest(".action-btn")) p.classList.remove("show");
+        });
+        scrollBottom();
+    </script>
+</body>
+</html>

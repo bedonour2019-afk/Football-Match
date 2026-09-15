@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Football_Match.Models
 {
@@ -18,9 +18,16 @@ namespace Football_Match.Models
 
         public string? Note { get; set; }
 
+        // مسار الصورة الشخصية (اختياري)
+        public string? ProfilePicturePath { get; set; }
+
         public DateTime RespondedAt { get; set; } = DateTime.Now;
 
-        // لتخزين تاريخ التعديل إذا قام بالعديل
+        // لتخزين تاريخ التعديل إذا قام بالتعديل
         public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Properties
+        public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
+        public ICollection<MessageReaction> MessageReactions { get; set; } = new List<MessageReaction>();
     }
 }
