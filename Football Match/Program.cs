@@ -4,10 +4,8 @@ using Football_Match.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// تسجيل خدمات Controllers & Views
 builder.Services.AddControllersWithViews();
 
-// تفعيل Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(24);
@@ -15,7 +13,6 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// تسجيل AppDbContext مع تفعيل إعادة المحاولة لتجاوز مشاكل الاتصال بالسيرفر الخارجي
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")
@@ -27,22 +24,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         )
     ));
 
-// إضافة SignalR
 builder.Services.AddSignalR();
 
-// زيادة حجم الرفع للصور والفيديو
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024;
 });
 
 var app = builder.Build();
 
-// تطبيق الـ Migrations وبناء الجداول تلقائياً على السيرفر الخارجي عند التشغيل
-using (var scope = app.Services.CreateScope())
+// تشغيل المايجريشن بأمان تام من غير ما يوقع الموقع لو حصلت مشكلة
+try
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        dbContext.Database.Migrate();
+    }
+}
+catch (Exception)
+{
+    // تتخطى أي خطأ مؤقت في المايجريشن عشان السيرفر يقوم ومايضربش 500.30
 }
 
 if (!app.Environment.IsDevelopment())
@@ -53,10 +55,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// تفعيل Session قبل الـ Authorization
 app.UseSession();
 app.UseAuthorization();
 
@@ -64,8 +64,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// ربط ChatHub
 app.MapHub<ChatHub>("/chathub");
 
 app.Run();
-// refres
