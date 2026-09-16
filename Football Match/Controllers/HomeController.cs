@@ -16,30 +16,36 @@ namespace Football_Match.Controllers
             _env = env;
         }
 
-        // 1. صفحة التسجيل الرئيسية
         public IActionResult Index()
         {
             return View();
         }
 
-        // 2. استقبال البيانات أو تعديلها برقم الموبايل
         [HttpPost]
         public async Task<IActionResult> Submit(Attendance model, IFormFile? profilePhoto)
         {
+            if (string.IsNullOrWhiteSpace(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.FriendName))
+            {
+                ModelState.AddModelError("", "رقم الهاتف والاسم مطلوبان!");
+                return View("Index", model);
+            }
+
+            model.PhoneNumber = model.PhoneNumber.Trim();
+            model.FriendName = model.FriendName.Trim();
+
             if (ModelState.IsValid)
             {
-                var existingAttendance = _context.Attendances
-                    .FirstOrDefault(a => a.PhoneNumber.Trim() == model.PhoneNumber.Trim());
+                // استخدام FirstOrDefaultAsync لمنع تعليق الـ Connection تماماً
+                var existingAttendance = await _context.Attendances
+                    .FirstOrDefaultAsync(a => a.PhoneNumber == model.PhoneNumber);
 
                 if (existingAttendance != null)
                 {
-                    // تحديث بيانات الحساب القديم وتسجيل وقت التعديل
-                    existingAttendance.FriendName = model.FriendName.Trim();
+                    existingAttendance.FriendName = model.FriendName;
                     existingAttendance.Status = model.Status;
                     existingAttendance.Note = model.Note;
                     existingAttendance.UpdatedAt = DateTime.Now;
 
-                    // تحديث الصورة لو رفع واحدة جديدة
                     if (profilePhoto != null && profilePhoto.Length > 0)
                     {
                         existingAttendance.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
@@ -48,15 +54,11 @@ namespace Football_Match.Controllers
                     _context.Attendances.Update(existingAttendance);
                     TempData["SuccessMessage"] = "تم تعديل موقفك بنجاح! ✏️";
 
-                    // حفظ Session
                     HttpContext.Session.SetInt32("AttendanceId", existingAttendance.Id);
                     HttpContext.Session.SetString("UserName", existingAttendance.FriendName);
                 }
                 else
                 {
-                    // إنشاء تسجيل جديد
-                    model.PhoneNumber = model.PhoneNumber.Trim();
-                    model.FriendName = model.FriendName.Trim();
                     model.RespondedAt = DateTime.Now;
 
                     if (profilePhoto != null && profilePhoto.Length > 0)
@@ -65,13 +67,13 @@ namespace Football_Match.Controllers
                     }
 
                     _context.Attendances.Add(model);
+                    TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
+
                     await _context.SaveChangesAsync();
 
-                    // حفظ Session
                     HttpContext.Session.SetInt32("AttendanceId", model.Id);
                     HttpContext.Session.SetString("UserName", model.FriendName);
 
-                    TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
                     return RedirectToAction("Success");
                 }
 
@@ -82,7 +84,6 @@ namespace Football_Match.Controllers
             return View("Index", model);
         }
 
-        // حفظ الصورة الشخصية
         private async Task<string> SaveProfilePhoto(IFormFile photo)
         {
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
@@ -97,7 +98,6 @@ namespace Football_Match.Controllers
             return "/uploads/profiles/" + uniqueName;
         }
 
-        // حفظ ميديا الشات
         [HttpPost]
         public async Task<IActionResult> UploadMedia(IFormFile file)
         {
@@ -108,7 +108,6 @@ namespace Football_Match.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("لم يتم إرسال ملف");
 
-            // التحقق من نوع الملف
             var allowedImageTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
             var allowedVideoTypes = new[] { "video/mp4", "video/webm", "video/ogg" };
             var allAllowed = allowedImageTypes.Concat(allowedVideoTypes).ToArray();
@@ -129,21 +128,21 @@ namespace Football_Match.Controllers
             return Json(new { path = "/uploads/chat/" + uniqueName, type = mediaType });
         }
 
-        // 3. صفحة تأكيد الإرسال
         public IActionResult Success()
         {
             ViewBag.Message = TempData["SuccessMessage"] ?? "تم الحفظ بنجاح!";
             return View();
         }
 
-        // 4. غرفة الحضور (متاحة لمن سجّل)
         public async Task<IActionResult> Room()
         {
             var attendances = await _context.Attendances
+                .AsNoTracking()
                 .OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt)
                 .ToListAsync();
 
             var messages = await _context.ChatMessages
+                .AsNoTracking()
                 .Include(m => m.Sender)
                 .Include(m => m.Reactions)
                 .Where(m => !m.IsDeleted)
@@ -158,14 +157,12 @@ namespace Football_Match.Controllers
             return View(attendances);
         }
 
-        // 5. عرض صفحة دخول الأدمن (GET)
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
-        // 6. التحقق من بيانات دخول الأدمن (POST)
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
@@ -179,7 +176,6 @@ namespace Football_Match.Controllers
             return View();
         }
 
-        // 7. لوحة الأدمن المحمية
         public IActionResult Admin()
         {
             if (HttpContext.Session.GetString("IsAdmin") != "true")
@@ -187,11 +183,10 @@ namespace Football_Match.Controllers
                 return RedirectToAction("Login");
             }
 
-            var responses = _context.Attendances.OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt).ToList();
+            var responses = _context.Attendances.AsNoTracking().OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt).ToList();
             return View(responses);
         }
 
-        // 8. حذف إجابة برقم الـ Id (للأدمن فقط)
         [HttpPost]
         public IActionResult Delete(int id)
         {
@@ -210,7 +205,6 @@ namespace Football_Match.Controllers
             return RedirectToAction("Admin");
         }
 
-        // 9. تسجيل الخروج
         public IActionResult Logout()
         {
             HttpContext.Session.Remove("IsAdmin");

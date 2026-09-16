@@ -15,10 +15,17 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// تسجيل AppDbContext
+// تسجيل AppDbContext مع تفعيل إعادة المحاولة لتجاوز مشاكل الاتصال بالسيرفر الخارجي
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=(localdb)\\mssqllocaldb;Database=FootballMatchDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Server=(localdb)\\MSSQLLocalDB;Database=FootballMatchDb;Trusted_Connection=True;MultipleActiveResultSets=true;Connect Timeout=30",
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null
+        )
+    ));
 
 // إضافة SignalR
 builder.Services.AddSignalR();
@@ -30,6 +37,13 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 });
 
 var app = builder.Build();
+
+// تطبيق الـ Migrations وبناء الجداول تلقائياً على السيرفر الخارجي عند التشغيل
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -53,4 +67,5 @@ app.MapControllerRoute(
 // ربط ChatHub
 app.MapHub<ChatHub>("/chathub");
 
-app.Run();
+app.Run();
+// refres

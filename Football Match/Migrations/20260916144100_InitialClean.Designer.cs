@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Football_Match.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260915232139_AddProfilePicturePath")]
-    partial class AddProfilePicturePath
+    [Migration("20260916144100_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -109,6 +109,9 @@ namespace Football_Match.Migrations
                     b.Property<int>("ChatMessageId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ChatMessageId1")
+                        .HasColumnType("int");
+
                     b.Property<string>("ReactionType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -118,6 +121,8 @@ namespace Football_Match.Migrations
                     b.HasIndex("AttendanceId");
 
                     b.HasIndex("ChatMessageId");
+
+                    b.HasIndex("ChatMessageId1");
 
                     b.ToTable("MessageReactions");
                 });
@@ -142,10 +147,14 @@ namespace Football_Match.Migrations
                         .IsRequired();
 
                     b.HasOne("Football_Match.Models.ChatMessage", "ChatMessage")
-                        .WithMany("Reactions")
+                        .WithMany()
                         .HasForeignKey("ChatMessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("Football_Match.Models.ChatMessage", null)
+                        .WithMany("Reactions")
+                        .HasForeignKey("ChatMessageId1");
 
                     b.Navigation("ChatMessage");
 

@@ -6,16 +6,29 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Football_Match.Migrations
 {
     /// <inheritdoc />
-    public partial class AddProfilePicturePath : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "ProfilePicturePath",
-                table: "Attendances",
-                type: "nvarchar(max)",
-                nullable: true);
+            migrationBuilder.CreateTable(
+                name: "Attendances",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FriendName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProfilePicturePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RespondedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Attendances", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "ChatMessages",
@@ -49,7 +62,8 @@ namespace Football_Match.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ChatMessageId = table.Column<int>(type: "int", nullable: false),
                     AttendanceId = table.Column<int>(type: "int", nullable: false),
-                    ReactionType = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    ReactionType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ChatMessageId1 = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -64,8 +78,12 @@ namespace Football_Match.Migrations
                         name: "FK_MessageReactions_ChatMessages_ChatMessageId",
                         column: x => x.ChatMessageId,
                         principalTable: "ChatMessages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_MessageReactions_ChatMessages_ChatMessageId1",
+                        column: x => x.ChatMessageId1,
+                        principalTable: "ChatMessages",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -82,6 +100,11 @@ namespace Football_Match.Migrations
                 name: "IX_MessageReactions_ChatMessageId",
                 table: "MessageReactions",
                 column: "ChatMessageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MessageReactions_ChatMessageId1",
+                table: "MessageReactions",
+                column: "ChatMessageId1");
         }
 
         /// <inheritdoc />
@@ -93,9 +116,8 @@ namespace Football_Match.Migrations
             migrationBuilder.DropTable(
                 name: "ChatMessages");
 
-            migrationBuilder.DropColumn(
-                name: "ProfilePicturePath",
-                table: "Attendances");
+            migrationBuilder.DropTable(
+                name: "Attendances");
         }
     }
 }
