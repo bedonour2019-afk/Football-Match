@@ -98,13 +98,15 @@ namespace Football_Match.Controllers
             }
             catch (Exception ex)
             {
+                // طباعة تفاصيل الخطأ كاملة لمعرفة السبب الحقيقي فوراً أونلاين
+                string fullErrorDetails = $"DB / Operation Exception Details:\n\nMessage: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}\n\nFull Stack Trace:\n{ex}";
+
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
-                    return BadRequest(new { success = false, message = "حصلت مشكلة: " + ex.Message });
+                    return StatusCode(500, new { success = false, message = fullErrorDetails });
                 }
 
-                TempData["ErrorMessage"] = "حصلت مشكلة: " + ex.Message;
-                return RedirectToAction("Index");
+                return Content(fullErrorDetails, "text/plain; charset=utf-8");
             }
         }
 
