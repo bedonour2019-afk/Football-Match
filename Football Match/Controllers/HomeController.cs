@@ -2,6 +2,7 @@
 using Football_Match;
 using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Football_Match.Controllers
 {
@@ -9,11 +10,13 @@ namespace Football_Match.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(AppDbContext context, IWebHostEnvironment env)
+        public HomeController(AppDbContext context, IWebHostEnvironment env, ILogger<HomeController> logger)
         {
             _context = context;
             _env = env;
+            _logger = logger;
         }
 
         // 1. الصفحة الرئيسية
@@ -27,7 +30,6 @@ namespace Football_Match.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Submit(string PhoneNumber, string FriendName, string Status, string? Note, IFormFile? profilePhoto)
         {
-            // تنظيف المدخلات
             PhoneNumber = (PhoneNumber ?? "").Trim();
             FriendName = (FriendName ?? "").Trim();
             Status = (Status ?? "جاي أكيد").Trim();
@@ -50,7 +52,6 @@ namespace Football_Match.Controllers
 
                 if (existingAttendance != null)
                 {
-                    // تحديث
                     existingAttendance.FriendName = FriendName;
                     existingAttendance.Status = Status;
                     existingAttendance.Note = Note?.Trim();
@@ -67,7 +68,6 @@ namespace Football_Match.Controllers
                 }
                 else
                 {
-                    // جديد
                     var model = new Attendance
                     {
                         PhoneNumber = PhoneNumber,
@@ -88,7 +88,6 @@ namespace Football_Match.Controllers
                     TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
                 }
 
-                // لو الطلب جاي عن طريق AJAX في الجافاسكريبت، نرجع مسار التوجيه كـ JSON
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
                     return Json(new { success = true, redirectUrl = Url.Action("Success") });
@@ -98,8 +97,8 @@ namespace Football_Match.Controllers
             }
             catch (Exception ex)
             {
-                // طباعة تفاصيل الخطأ كاملة لمعرفة السبب الحقيقي فوراً أونلاين
-                string fullErrorDetails = $"DB / Operation Exception Details:\n\nMessage: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}\n\nFull Stack Trace:\n{ex}";
+                _logger.LogError(ex, "Error occurred during attendance submission.");
+                string fullErrorDetails = $"DB / Operation Exception Details:\n\nMessage: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}";
 
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
@@ -129,23 +128,23 @@ namespace Football_Match.Controllers
             return "/uploads/profiles/" + uniqueName;
         }
 
-        // رفع ميديا الشات
+        // رفع ميديا الشات (محسنة لتدعم استجابات JSON دائمًا)
         [HttpPost]
         public async Task<IActionResult> UploadMedia(IFormFile file)
         {
             var attendanceId = HttpContext.Session.GetInt32("AttendanceId");
             if (attendanceId == null)
-                return Unauthorized();
+                return StatusCode(401, new { message = "انتهت الجلسة، يرجى تسجيل الحضور أولاً" });
 
             if (file == null || file.Length == 0)
-                return BadRequest("لم يتم إرسال ملف");
+                return BadRequest(new { message = "لم يتم إرسال ملف" });
 
             var allowedImageTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
             var allowedVideoTypes = new[] { "video/mp4", "video/webm", "video/ogg" };
             var allAllowed = allowedImageTypes.Concat(allowedVideoTypes).ToArray();
 
             if (!allAllowed.Contains(file.ContentType))
-                return BadRequest("نوع الملف غير مسموح");
+                return BadRequest(new { message = "نوع الملف غير مسموح به" });
 
             var mediaType = allowedImageTypes.Contains(file.ContentType) ? "image" : "video";
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "chat");
@@ -168,18 +167,25 @@ namespace Football_Match.Controllers
             return View();
         }
 
-        // 4. غرفة الحضور (معدلة للحماية من أخطاء الشات والجداول المفقودة)
+        // 4. غرفة الحضور والشات (محدثة مع حماية الجلسة)
         public async Task<IActionResult> Room()
         {
+            var currentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
+
+            // التحقق من وجود Session قبل الدخول لمنع الفشل الصامت عند إرسال الرسائل
+            if (currentAttendanceId == null)
+            {
+                TempData["ErrorMessage"] = "يرجى تسجيل موقفك ورقم الموبايل أولاً لدخول الشات!";
+                return RedirectToAction("Index");
+            }
+
             try
             {
-                // جلب قائمة الحضور
                 var attendances = await _context.Attendances
                     .AsNoTracking()
                     .OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt)
                     .ToListAsync();
 
-                // جلب رسائل الشات بحماية حتى لا تسبب خطأ HTTP 500
                 var messages = new List<ChatMessage>();
                 try
                 {
@@ -191,19 +197,19 @@ namespace Football_Match.Controllers
                         .OrderBy(m => m.SentAt)
                         .ToListAsync();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // يتجاهل أخطاء جدول الشات في حال عدم اكتمال إنشائه أونلاين
+                    _logger.LogWarning(ex, "Could not fetch ChatMessages. Table might be empty or missing.");
                 }
 
-                ViewBag.CurrentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
+                ViewBag.CurrentAttendanceId = currentAttendanceId;
                 ViewBag.Messages = messages ?? new List<ChatMessage>();
 
                 return View(attendances);
             }
             catch (Exception ex)
             {
-                // طباعة خطأ تفصيلي إن وجد لسهولة التشخيص
+                _logger.LogError(ex, "Error loading Room page.");
                 return Content($"Room Page Error:\n\nMessage: {ex.Message}\n\nDetails:\n{ex}", "text/plain; charset=utf-8");
             }
         }

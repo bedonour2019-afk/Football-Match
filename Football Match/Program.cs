@@ -10,13 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
-        // منع المشاكل المتعلقة بـ Circular References أثناء تحويل البيانات لـ JSON
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 // 2. الوصول لـ HttpContext والـ Memory Cache الخاص بالـ Session
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddDistributedMemoryCache(); // ضروري لعمل الـ Session بدون أخطاء
+builder.Services.AddDistributedMemoryCache();
 
 // 3. إعداد الـ Session
 builder.Services.AddSession(options =>
@@ -24,6 +23,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(24);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.Name = ".FootballMatch.Session";
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
@@ -44,13 +44,13 @@ builder.Services.AddSignalR(options =>
     options.EnableDetailedErrors = true;
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
-    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB كحد أقصى لحجم رسالة الـ Chat
+    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
 });
 
 // 6. رفع الحد الأقصى لحجم الملفات (Kestrel + IIS + FormOptions)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024;
     options.ValueLengthLimit = 50 * 1024 * 1024;
     options.MultipartHeadersLengthLimit = 50 * 1024 * 1024;
 });
@@ -79,7 +79,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// ترتيب الـ Middleware مهم جداً لعمل الـ Session والتأكد من هويتها
+// الترتيب الصارم للـ Session والتخويل
 app.UseSession();
 app.UseAuthorization();
 
