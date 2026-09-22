@@ -2,6 +2,7 @@
 using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace Football_Match.Hubs
 {
@@ -76,12 +77,17 @@ namespace Football_Match.Hubs
         {
             try
             {
-                if (attendanceId <= 0) return;
+                var isAdmin = Context.GetHttpContext()?.Session.GetString("IsAdmin") == "true";
+
+                if (attendanceId <= 0 && !isAdmin) return;
 
                 var message = await _context.ChatMessages
-                    .FirstOrDefaultAsync(m => m.Id == messageId && m.AttendanceId == attendanceId);
+                    .FirstOrDefaultAsync(m => m.Id == messageId);
 
                 if (message == null) return;
+
+                var isOwner = attendanceId > 0 && message.AttendanceId == attendanceId;
+                if (!isOwner && !isAdmin) return;
 
                 message.IsDeleted = true;
                 await _context.SaveChangesAsync();

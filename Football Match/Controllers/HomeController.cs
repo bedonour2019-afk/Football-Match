@@ -204,6 +204,7 @@ namespace Football_Match.Controllers
 
                 ViewBag.CurrentAttendanceId = currentAttendanceId;
                 ViewBag.Messages = messages ?? new List<ChatMessage>();
+                ViewBag.IsAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
 
                 return View(attendances);
             }

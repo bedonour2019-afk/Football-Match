@@ -3,6 +3,7 @@
     Layout = null;
     var messages = ViewBag.Messages as IEnumerable<Football_Match.Models.ChatMessage>;
     int currentId = ViewBag.CurrentAttendanceId ?? 0;
+    bool isAdminUser = ViewBag.IsAdmin ?? false;
     var goingList = Model.Where(m => m.Status == "جاي أكيد").ToList();
     var notGoingList = Model.Where(m => m.Status == "مش جاي").ToList();
     var maybeList = Model.Where(m => m.Status == "احتمال أجي").ToList();
@@ -975,7 +976,7 @@
                                         {
                                             <button class="action-icon-btn" onclick="copyMsgText(this)" title="نسخ النص"><i class="far fa-copy"></i></button>
                                         }
-                                        @if (isMine)
+                                        @if (isMine || isAdminUser)
                                         {
                                             <button class="action-icon-btn del-btn" onclick="deleteMessage(@msg.Id)" title="حذف"><i class="fas fa-trash"></i></button>
                                         }
@@ -1044,6 +1045,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
             const currentId = @currentId;
+            const isAdminUser = @(isAdminUser ? "true" : "false");
             let pendingMedia = null;
 
             // SignalR Connection
@@ -1141,7 +1143,7 @@
             }
 
             async function deleteMessage(id) {
-                if (currentId === 0) return;
+                if (currentId === 0 && !isAdminUser) return;
                 if (!confirm("هل انت متأكد من حذف هذه الرسالة؟")) return;
                 await connection.invoke("DeleteMessage", currentId, id);
             }
@@ -1171,7 +1173,7 @@
                     }
                 }
 
-                const delBtn = isMine ? `<button class="action-icon-btn del-btn" onclick="deleteMessage(${msg.id})" title="حذف"><i class="fas fa-trash"></i></button>` : "";
+                const delBtn = (isMine || isAdminUser) ? `<button class="action-icon-btn del-btn" onclick="deleteMessage(${msg.id})" title="حذف"><i class="fas fa-trash"></i></button>` : "";
                 const copyBtn = msg.content ? `<button class="action-icon-btn" onclick="copyMsgText(this)" title="نسخ النص"><i class="far fa-copy"></i></button>` : "";
 
                 const reactBtns = `<div class="react-buttons">
