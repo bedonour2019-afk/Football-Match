@@ -168,26 +168,44 @@ namespace Football_Match.Controllers
             return View();
         }
 
-        // 4. غرفة الحضور
+        // 4. غرفة الحضور (معدلة للحماية من أخطاء الشات والجداول المفقودة)
         public async Task<IActionResult> Room()
         {
-            var attendances = await _context.Attendances
-                .AsNoTracking()
-                .OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt)
-                .ToListAsync();
+            try
+            {
+                // جلب قائمة الحضور
+                var attendances = await _context.Attendances
+                    .AsNoTracking()
+                    .OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt)
+                    .ToListAsync();
 
-            var messages = await _context.ChatMessages
-                .AsNoTracking()
-                .Include(m => m.Sender)
-                .Include(m => m.Reactions)
-                .Where(m => !m.IsDeleted)
-                .OrderBy(m => m.SentAt)
-                .ToListAsync();
+                // جلب رسائل الشات بحماية حتى لا تسبب خطأ HTTP 500
+                var messages = new List<ChatMessage>();
+                try
+                {
+                    messages = await _context.ChatMessages
+                        .AsNoTracking()
+                        .Include(m => m.Sender)
+                        .Include(m => m.Reactions)
+                        .Where(m => !m.IsDeleted)
+                        .OrderBy(m => m.SentAt)
+                        .ToListAsync();
+                }
+                catch
+                {
+                    // يتجاهل أخطاء جدول الشات في حال عدم اكتمال إنشائه أونلاين
+                }
 
-            ViewBag.CurrentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
-            ViewBag.Messages = messages;
+                ViewBag.CurrentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
+                ViewBag.Messages = messages ?? new List<ChatMessage>();
 
-            return View(attendances);
+                return View(attendances);
+            }
+            catch (Exception ex)
+            {
+                // طباعة خطأ تفصيلي إن وجد لسهولة التشخيص
+                return Content($"Room Page Error:\n\nMessage: {ex.Message}\n\nDetails:\n{ex}", "text/plain; charset=utf-8");
+            }
         }
 
         // 5. Login Admin GET
