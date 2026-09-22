@@ -1,121 +1,158 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Football_Match.Hubs
 {
     public class ChatHub : Hub
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<ChatHub> _logger;
 
-        public ChatHub(AppDbContext context)
+        public ChatHub(AppDbContext context, ILogger<ChatHub> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         private int? GetCurrentAttendanceId()
         {
-            return Context.GetHttpContext()?.Session.GetInt32("AttendanceId");
+            var httpContext = Context.GetHttpContext();
+            return httpContext?.Session.GetInt32("AttendanceId");
         }
 
         public async Task SendMessage(string content, string? mediaPath, string? mediaType)
         {
-            var attendanceId = GetCurrentAttendanceId();
-            if (attendanceId == null) return;
-
-            var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
-            if (attendance == null) return;
-
-            var hasContent = !string.IsNullOrWhiteSpace(content);
-            var hasMedia = !string.IsNullOrWhiteSpace(mediaPath);
-            if (!hasContent && !hasMedia) return;
-
-            var message = new ChatMessage
+            try
             {
-                AttendanceId = attendanceId.Value,
-                Content = hasContent ? content.Trim() : null,
-                MediaPath = hasMedia ? mediaPath : null,
-                MediaType = hasMedia ? mediaType : null,
-                SentAt = DateTime.Now,
-                IsDeleted = false
-            };
+                var attendanceId = GetCurrentAttendanceId();
+                if (attendanceId == null)
+                {
+                    _logger.LogWarning("SendMessage attempted without valid AttendanceId in Session.");
+                    return;
+                }
 
-            _context.ChatMessages.Add(message);
-            await _context.SaveChangesAsync();
+                var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
+                if (attendance == null)
+                {
+                    _logger.LogWarning("Attendance record not found for Id: {AttendanceId}", attendanceId.Value);
+                    return;
+                }
 
-            await Clients.All.SendAsync("ReceiveMessage", new
+                var hasContent = !string.IsNullOrWhiteSpace(content);
+                var hasMedia = !string.IsNullOrWhiteSpace(mediaPath);
+                if (!hasContent && !hasMedia) return;
+
+                var message = new ChatMessage
+                {
+                    AttendanceId = attendanceId.Value,
+                    Content = hasContent ? content.Trim() : null,
+                    MediaPath = hasMedia ? mediaPath : null,
+                    MediaType = hasMedia ? mediaType : null,
+                    SentAt = DateTime.Now,
+                    IsDeleted = false
+                };
+
+                _context.ChatMessages.Add(message);
+                await _context.SaveChangesAsync();
+
+                // إرسال الرسالة لجميع العملاء المتصلين
+                await Clients.All.SendAsync("ReceiveMessage", new
+                {
+                    id = message.Id,
+                    senderId = attendanceId.Value,
+                    senderName = attendance.FriendName,
+                    senderPhoto = attendance.ProfilePicturePath ?? "",
+                    content = message.Content ?? "",
+                    mediaPath = message.MediaPath ?? "",
+                    mediaType = message.MediaType ?? "",
+                    sentAt = message.SentAt.ToString("HH:mm"),
+                    reactions = Array.Empty<object>()
+                });
+            }
+            catch (Exception ex)
             {
-                id = message.Id,
-                senderId = attendanceId.Value,
-                senderName = attendance.FriendName,
-                senderPhoto = attendance.ProfilePicturePath ?? "",
-                content = message.Content ?? "",
-                mediaPath = message.MediaPath ?? "",
-                mediaType = message.MediaType ?? "",
-                sentAt = message.SentAt.ToString("HH:mm"),
-                reactions = Array.Empty<object>()
-            });
+                _logger.LogError(ex, "Error occurred while sending message in ChatHub.");
+                throw;
+            }
         }
 
         public async Task DeleteMessage(int messageId)
         {
-            var attendanceId = GetCurrentAttendanceId();
-            if (attendanceId == null) return;
+            try
+            {
+                var attendanceId = GetCurrentAttendanceId();
+                if (attendanceId == null) return;
 
-            var message = await _context.ChatMessages
-                .FirstOrDefaultAsync(m => m.Id == messageId && m.AttendanceId == attendanceId.Value);
+                var message = await _context.ChatMessages
+                    .FirstOrDefaultAsync(m => m.Id == messageId && m.AttendanceId == attendanceId.Value);
 
-            if (message == null) return;
+                if (message == null) return;
 
-            message.IsDeleted = true;
-            await _context.SaveChangesAsync();
+                message.IsDeleted = true;
+                await _context.SaveChangesAsync();
 
-            await Clients.All.SendAsync("MessageDeleted", messageId);
+                await Clients.All.SendAsync("MessageDeleted", messageId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting message ID {MessageId} in ChatHub.", messageId);
+                throw;
+            }
         }
 
         public async Task AddReaction(int messageId, string reactionType)
         {
-            var attendanceId = GetCurrentAttendanceId();
-            if (attendanceId == null) return;
-
-            var msgExists = await _context.ChatMessages.AnyAsync(m => m.Id == messageId && !m.IsDeleted);
-            if (!msgExists) return;
-
-            var existing = await _context.MessageReactions
-                .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId.Value);
-
-            if (existing != null)
+            try
             {
-                if (existing.ReactionType == reactionType)
+                var attendanceId = GetCurrentAttendanceId();
+                if (attendanceId == null) return;
+
+                var msgExists = await _context.ChatMessages.AnyAsync(m => m.Id == messageId && !m.IsDeleted);
+                if (!msgExists) return;
+
+                var existing = await _context.MessageReactions
+                    .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId.Value);
+
+                if (existing != null)
                 {
-                    // toggle off
-                    _context.MessageReactions.Remove(existing);
+                    if (existing.ReactionType == reactionType)
+                    {
+                        // إزالة التفاعل (Toggle Off)
+                        _context.MessageReactions.Remove(existing);
+                    }
+                    else
+                    {
+                        // تغيير نوع التفاعل
+                        existing.ReactionType = reactionType;
+                    }
                 }
                 else
                 {
-                    // change reaction
-                    existing.ReactionType = reactionType;
+                    _context.MessageReactions.Add(new MessageReaction
+                    {
+                        ChatMessageId = messageId,
+                        AttendanceId = attendanceId.Value,
+                        ReactionType = reactionType
+                    });
                 }
+
+                await _context.SaveChangesAsync();
+
+                var counts = await _context.MessageReactions
+                    .Where(r => r.ChatMessageId == messageId)
+                    .GroupBy(r => r.ReactionType)
+                    .Select(g => new { type = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                await Clients.All.SendAsync("ReactionUpdated", messageId, counts);
             }
-            else
+            catch (Exception ex)
             {
-                _context.MessageReactions.Add(new MessageReaction
-                {
-                    ChatMessageId = messageId,
-                    AttendanceId = attendanceId.Value,
-                    ReactionType = reactionType
-                });
+                _logger.LogError(ex, "Error updating reaction for message ID {MessageId} in ChatHub.", messageId);
+                throw;
             }
-
-            await _context.SaveChangesAsync();
-
-            var counts = await _context.MessageReactions
-                .Where(r => r.ChatMessageId == messageId)
-                .GroupBy(r => r.ReactionType)
-                .Select(g => new { type = g.Key, count = g.Count() })
-                .ToListAsync();
-
-            await Clients.All.SendAsync("ReactionUpdated", messageId, counts);
         }
     }
 }

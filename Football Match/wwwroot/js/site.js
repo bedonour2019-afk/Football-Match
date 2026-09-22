@@ -5,6 +5,8 @@
  * Football Match App - Global JavaScript Utilities
  */
 
+let toastTimeout = null;
+
 document.addEventListener("DOMContentLoaded", function () {
     // 1. تهيئة الـ Tooltips من Bootstrap تلقائياً إن وجدت
     if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
@@ -14,12 +16,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 2. إغلاق القوائم عند الضغط على مفتاح Escape
+    // 2. إغلاق القوائم والنوافذ عند الضغط على مفتاح Escape
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
             closeGlobalLightbox();
             const emojiPicker = document.getElementById("emojiPicker");
             if (emojiPicker) emojiPicker.classList.remove("show");
+
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar && sidebar.classList.contains("show-mobile")) {
+                toggleMobileSidebar();
+            }
         }
     });
 });
@@ -54,6 +61,11 @@ function showToast(message, type = 'success') {
         document.body.appendChild(toastEl);
     }
 
+    // إلغاء التوقيت السابق لمنع التداخل عند الضغط المتكرر
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+    }
+
     if (type === 'error') {
         toastEl.style.background = 'rgba(239, 68, 68, 0.95)';
     } else if (type === 'info') {
@@ -66,7 +78,7 @@ function showToast(message, type = 'success') {
     toastEl.style.opacity = '1';
     toastEl.style.transform = 'translateX(-50%) translateY(5px)';
 
-    setTimeout(() => {
+    toastTimeout = setTimeout(() => {
         toastEl.style.opacity = '0';
         toastEl.style.transform = 'translateX(-50%) translateY(0px)';
     }, 2500);
@@ -83,6 +95,7 @@ function copyToClipboard(text) {
             showToast("تم النسخ إلى الحافظة!");
         }).catch(err => {
             console.error("فشل النسخ:", err);
+            showToast("حدث خطأ أثناء النسخ", "error");
         });
     } else {
         const textArea = document.createElement("textarea");
@@ -96,6 +109,7 @@ function copyToClipboard(text) {
             showToast("تم النسخ إلى الحافظة!");
         } catch (err) {
             console.error("فشل النسخ الاحتياطي:", err);
+            showToast("حدث خطأ أثناء النسخ", "error");
         }
         document.body.removeChild(textArea);
     }
@@ -138,7 +152,7 @@ function openGlobalLightbox(src) {
         lightbox.onclick = closeGlobalLightbox;
         document.body.appendChild(lightbox);
     }
-    
+
     document.getElementById("globalLightboxImg").src = src;
     lightbox.style.display = "flex";
 }
@@ -151,4 +165,28 @@ function closeGlobalLightbox() {
     if (lightbox) {
         lightbox.style.display = "none";
     }
+}
+
+/* ==========================================================================
+   Global Compatibility Helpers (لضمان توافق جميع الصفحات والشات)
+   ========================================================================== */
+
+function autoResize(element) {
+    autoResizeTextarea(element);
+}
+
+function openLightbox(src) {
+    openGlobalLightbox(src);
+}
+
+function closeLightbox(e) {
+    if (e) e.stopPropagation();
+    closeGlobalLightbox();
+}
+
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    if (sidebar) sidebar.classList.toggle("show-mobile");
+    if (backdrop) backdrop.classList.toggle("show");
 }
