@@ -1,12 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Football_Match;
+using Football_Match.Models;
 using Football_Match.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. إضافة الـ Controllers والـ Views
 builder.Services.AddControllersWithViews();
 
-// Session - مدة 24 ساعة
+// 2. الوصول لـ HttpContext جوه الخدمات والـ Hubs
+builder.Services.AddHttpContextAccessor();
+
+// 3. إعداد الـ Session - مدة 24 ساعة
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(24);
@@ -15,18 +20,18 @@ builder.Services.AddSession(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-// قاعدة البيانات
+// 4. إعداد قاعدة البيانات مع إمكانية إعادة المحاولة عند انقطاع الاتصال
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
+            maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(10),
             errorNumbersToAdd: null
         )
     ));
 
-// SignalR مع دعم Long Polling لـ shared hosting
+// 5. إعداد SignalR مع دعم Long Polling لبيئة الـ Shared Hosting
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
@@ -34,7 +39,7 @@ builder.Services.AddSignalR(options =>
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
 });
 
-// رفع حجم الملفات
+// 6. رفع الحد الأقصى لحجم الملفات المرفوعة (50 ميجابايت)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
@@ -42,12 +47,12 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 50 * 1024 * 1024;
+    options.Limits.MaxRequestBodySize = 50 * 1024 * 1024; // 50MB
 });
 
 var app = builder.Build();
 
-// تشغيل Migration تلقائياً
+// 7. إنشاء وترقية الجداول في قاعدة البيانات تلقائياً عند بدء التشغيل
 try
 {
     using var scope = app.Services.CreateScope();
@@ -57,9 +62,10 @@ try
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "Migration error on startup");
+    logger.LogError(ex, "خطأ أثناء تشغيل الـ Migration لقاعدة البيانات عند الإقلاع");
 }
 
+// 8. إعداد الـ Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -69,15 +75,15 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
 app.UseSession();
 app.UseAuthorization();
 
+// 9. التوجيه (Routing)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// SignalR مع تفعيل Long Polling كـ fallback
+// 10. ربط الـ SignalR Hub مع تفعيل Long Polling كـ Fallback للسيرفرات المشتركة
 app.MapHub<ChatHub>("/chathub", options =>
 {
     options.Transports =
