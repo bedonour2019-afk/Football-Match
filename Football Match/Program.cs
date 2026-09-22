@@ -67,6 +67,14 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
+// تطبيق الـ Migrations تلقائيًا عند بدء التشغيل
+// (مهم جدًا للاستضافة المشتركة زي MonsterASP لأنه مفيش وصول لتشغيل أوامر يدوية على السيرفر)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 // 7. إعداد الـ Middleware Pipeline
 if (!app.Environment.IsDevelopment())
 {

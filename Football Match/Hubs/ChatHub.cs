@@ -67,7 +67,8 @@ namespace Football_Match.Hubs
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while sending message in ChatHub.");
-                throw;
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                throw new HubException($"SendMessage failed: {detail}");
             }
         }
 
@@ -90,7 +91,8 @@ namespace Football_Match.Hubs
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting message ID {MessageId} in ChatHub.", messageId);
-                throw;
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                throw new HubException($"DeleteMessage failed: {detail}");
             }
         }
 
@@ -142,7 +144,8 @@ namespace Football_Match.Hubs
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating reaction for message ID {MessageId} in ChatHub.", messageId);
-                throw;
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                throw new HubException($"AddReaction failed: {detail}");
             }
         }
     }
