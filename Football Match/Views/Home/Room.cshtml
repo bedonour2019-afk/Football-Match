@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Football_Match.Models.Attendance>
+@model IEnumerable<Football_Match.Models.Attendance>
 @{
     Layout = null;
     var messages = ViewBag.Messages as IEnumerable<Football_Match.Models.ChatMessage>;
@@ -245,11 +245,22 @@
         let pendingMedia = null;
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chathub")
-            .withAutomaticReconnect()
+            .withUrl("/chathub", {
+                transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+            })
+            .withAutomaticReconnect([0, 2000, 5000, 10000])
             .build();
 
-        connection.start().catch(err => console.error("SignalR:", err));
+        async function startConnection() {
+            try {
+                await connection.start();
+                console.log("SignalR connected:", connection.state);
+            } catch (err) {
+                console.error("SignalR connection failed:", err);
+                setTimeout(startConnection, 5000);
+            }
+        }
+        startConnection();
 
         connection.on("ReceiveMessage", msg => { appendMessage(msg); scrollBottom(); });
         connection.on("MessageDeleted", id => {

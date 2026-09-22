@@ -7,10 +7,11 @@ namespace Football_Match.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "ادخل رقم الموبايل")]
-        [Phone]
+        [MaxLength(20)]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "ادخل اسمك")]
+        [MaxLength(100)]
         public string FriendName { get; set; } = string.Empty;
 
         [Required]
@@ -30,4 +31,4 @@ namespace Football_Match.Models
         public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
         public ICollection<MessageReaction> MessageReactions { get; set; } = new List<MessageReaction>();
     }
-}
+}

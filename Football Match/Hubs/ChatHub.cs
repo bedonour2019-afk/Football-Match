@@ -13,22 +13,31 @@ namespace Football_Match.Hubs
             _context = context;
         }
 
-        // إرسال رسالة نصية أو ميديا
+        private int? GetCurrentAttendanceId()
+        {
+            return Context.GetHttpContext()?.Session.GetInt32("AttendanceId");
+        }
+
         public async Task SendMessage(string content, string? mediaPath, string? mediaType)
         {
-            var attendanceId = Context.GetHttpContext()?.Session.GetInt32("AttendanceId");
+            var attendanceId = GetCurrentAttendanceId();
             if (attendanceId == null) return;
 
             var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
             if (attendance == null) return;
 
+            var hasContent = !string.IsNullOrWhiteSpace(content);
+            var hasMedia = !string.IsNullOrWhiteSpace(mediaPath);
+            if (!hasContent && !hasMedia) return;
+
             var message = new ChatMessage
             {
                 AttendanceId = attendanceId.Value,
-                Content = string.IsNullOrWhiteSpace(content) ? null : content,
-                MediaPath = mediaPath,
-                MediaType = mediaType,
-                SentAt = DateTime.Now
+                Content = hasContent ? content.Trim() : null,
+                MediaPath = hasMedia ? mediaPath : null,
+                MediaType = hasMedia ? mediaType : null,
+                SentAt = DateTime.Now,
+                IsDeleted = false
             };
 
             _context.ChatMessages.Add(message);
@@ -39,19 +48,18 @@ namespace Football_Match.Hubs
                 id = message.Id,
                 senderId = attendanceId.Value,
                 senderName = attendance.FriendName,
-                senderPhoto = attendance.ProfilePicturePath,
-                content = message.Content,
-                mediaPath = message.MediaPath,
-                mediaType = message.MediaType,
+                senderPhoto = attendance.ProfilePicturePath ?? "",
+                content = message.Content ?? "",
+                mediaPath = message.MediaPath ?? "",
+                mediaType = message.MediaType ?? "",
                 sentAt = message.SentAt.ToString("HH:mm"),
-                reactions = new object[] { }
+                reactions = Array.Empty<object>()
             });
         }
 
-        // حذف رسالة (صاحبها فقط)
         public async Task DeleteMessage(int messageId)
         {
-            var attendanceId = Context.GetHttpContext()?.Session.GetInt32("AttendanceId");
+            var attendanceId = GetCurrentAttendanceId();
             if (attendanceId == null) return;
 
             var message = await _context.ChatMessages
@@ -65,57 +73,49 @@ namespace Football_Match.Hubs
             await Clients.All.SendAsync("MessageDeleted", messageId);
         }
 
-        // إضافة ريأكشن
         public async Task AddReaction(int messageId, string reactionType)
         {
-            var attendanceId = Context.GetHttpContext()?.Session.GetInt32("AttendanceId");
+            var attendanceId = GetCurrentAttendanceId();
             if (attendanceId == null) return;
 
-            // تحقق لو هو عمل نفس الريأكشن قبل كده
-            var existingReaction = await _context.MessageReactions
-                .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId.Value && r.ReactionType == reactionType);
+            var msgExists = await _context.ChatMessages.AnyAsync(m => m.Id == messageId && !m.IsDeleted);
+            if (!msgExists) return;
 
-            if (existingReaction != null)
-            {
-                // إزالة الريأكشن (toggle)
-                _context.MessageReactions.Remove(existingReaction);
-                await _context.SaveChangesAsync();
-
-                var updatedCounts = await GetReactionCounts(messageId);
-                await Clients.All.SendAsync("ReactionUpdated", messageId, updatedCounts);
-                return;
-            }
-
-            // إزالة أي ريأكشن تاني من نفس الشخص على نفس الرسالة
-            var oldReaction = await _context.MessageReactions
+            var existing = await _context.MessageReactions
                 .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId.Value);
 
-            if (oldReaction != null)
-                _context.MessageReactions.Remove(oldReaction);
-
-            var reaction = new MessageReaction
+            if (existing != null)
             {
-                ChatMessageId = messageId,
-                AttendanceId = attendanceId.Value,
-                ReactionType = reactionType
-            };
+                if (existing.ReactionType == reactionType)
+                {
+                    // toggle off
+                    _context.MessageReactions.Remove(existing);
+                }
+                else
+                {
+                    // change reaction
+                    existing.ReactionType = reactionType;
+                }
+            }
+            else
+            {
+                _context.MessageReactions.Add(new MessageReaction
+                {
+                    ChatMessageId = messageId,
+                    AttendanceId = attendanceId.Value,
+                    ReactionType = reactionType
+                });
+            }
 
-            _context.MessageReactions.Add(reaction);
             await _context.SaveChangesAsync();
 
-            var counts = await GetReactionCounts(messageId);
-            await Clients.All.SendAsync("ReactionUpdated", messageId, counts);
-        }
-
-        private async Task<object> GetReactionCounts(int messageId)
-        {
-            var reactions = await _context.MessageReactions
+            var counts = await _context.MessageReactions
                 .Where(r => r.ChatMessageId == messageId)
                 .GroupBy(r => r.ReactionType)
                 .Select(g => new { type = g.Key, count = g.Count() })
                 .ToListAsync();
 
-            return reactions;
+            await Clients.All.SendAsync("ReactionUpdated", messageId, counts);
         }
     }
 }

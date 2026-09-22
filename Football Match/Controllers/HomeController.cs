@@ -16,80 +16,109 @@ namespace Football_Match.Controllers
             _env = env;
         }
 
+        // 1. الصفحة الرئيسية
         public IActionResult Index()
         {
             return View();
         }
 
+        // 2. استقبال التسجيل
         [HttpPost]
-        public async Task<IActionResult> Submit(Attendance model, IFormFile? profilePhoto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Submit(string PhoneNumber, string FriendName, string Status, string? Note, IFormFile? profilePhoto)
         {
-            if (string.IsNullOrWhiteSpace(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.FriendName))
+            // تنظيف المدخلات
+            PhoneNumber = (PhoneNumber ?? "").Trim();
+            FriendName = (FriendName ?? "").Trim();
+            Status = (Status ?? "جاي أكيد").Trim();
+
+            if (string.IsNullOrEmpty(PhoneNumber) || string.IsNullOrEmpty(FriendName))
             {
-                ModelState.AddModelError("", "رقم الهاتف والاسم مطلوبان!");
-                return View("Index", model);
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return BadRequest(new { success = false, message = "رقم الموبايل والاسم مطلوبان!" });
+                }
+
+                TempData["ErrorMessage"] = "رقم الموبايل والاسم مطلوبان!";
+                return RedirectToAction("Index");
             }
 
-            model.PhoneNumber = model.PhoneNumber.Trim();
-            model.FriendName = model.FriendName.Trim();
-
-            if (ModelState.IsValid)
+            try
             {
-                // استخدام FirstOrDefaultAsync لمنع تعليق الـ Connection تماماً
                 var existingAttendance = await _context.Attendances
-                    .FirstOrDefaultAsync(a => a.PhoneNumber == model.PhoneNumber);
+                    .FirstOrDefaultAsync(a => a.PhoneNumber == PhoneNumber);
 
                 if (existingAttendance != null)
                 {
-                    existingAttendance.FriendName = model.FriendName;
-                    existingAttendance.Status = model.Status;
-                    existingAttendance.Note = model.Note;
+                    // تحديث
+                    existingAttendance.FriendName = FriendName;
+                    existingAttendance.Status = Status;
+                    existingAttendance.Note = Note?.Trim();
                     existingAttendance.UpdatedAt = DateTime.Now;
 
                     if (profilePhoto != null && profilePhoto.Length > 0)
-                    {
                         existingAttendance.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
-                    }
 
-                    _context.Attendances.Update(existingAttendance);
-                    TempData["SuccessMessage"] = "تم تعديل موقفك بنجاح! ✏️";
+                    await _context.SaveChangesAsync();
 
                     HttpContext.Session.SetInt32("AttendanceId", existingAttendance.Id);
                     HttpContext.Session.SetString("UserName", existingAttendance.FriendName);
+                    TempData["SuccessMessage"] = "تم تعديل موقفك بنجاح! ✏️";
                 }
                 else
                 {
-                    model.RespondedAt = DateTime.Now;
+                    // جديد
+                    var model = new Attendance
+                    {
+                        PhoneNumber = PhoneNumber,
+                        FriendName = FriendName,
+                        Status = Status,
+                        Note = Note?.Trim(),
+                        RespondedAt = DateTime.Now
+                    };
 
                     if (profilePhoto != null && profilePhoto.Length > 0)
-                    {
                         model.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
-                    }
 
                     _context.Attendances.Add(model);
-                    TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
-
                     await _context.SaveChangesAsync();
 
                     HttpContext.Session.SetInt32("AttendanceId", model.Id);
                     HttpContext.Session.SetString("UserName", model.FriendName);
-
-                    return RedirectToAction("Success");
+                    TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
                 }
 
-                await _context.SaveChangesAsync();
+                // لو الطلب جاي عن طريق AJAX في الجافاسكريبت، نرجع مسار التوجيه كـ JSON
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = true, redirectUrl = Url.Action("Success") });
+                }
+
                 return RedirectToAction("Success");
             }
+            catch (Exception ex)
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return BadRequest(new { success = false, message = "حصلت مشكلة: " + ex.Message });
+                }
 
-            return View("Index", model);
+                TempData["ErrorMessage"] = "حصلت مشكلة: " + ex.Message;
+                return RedirectToAction("Index");
+            }
         }
 
+        // حفظ صورة البروفايل
         private async Task<string> SaveProfilePhoto(IFormFile photo)
         {
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
             Directory.CreateDirectory(uploadsFolder);
 
-            var uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(photo.FileName);
+            var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            if (!allowed.Contains(ext)) ext = ".jpg";
+
+            var uniqueName = Guid.NewGuid().ToString() + ext;
             var filePath = Path.Combine(uploadsFolder, uniqueName);
 
             using var stream = new FileStream(filePath, FileMode.Create);
@@ -98,6 +127,7 @@ namespace Football_Match.Controllers
             return "/uploads/profiles/" + uniqueName;
         }
 
+        // رفع ميديا الشات
         [HttpPost]
         public async Task<IActionResult> UploadMedia(IFormFile file)
         {
@@ -119,7 +149,8 @@ namespace Football_Match.Controllers
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "chat");
             Directory.CreateDirectory(uploadsFolder);
 
-            var uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var uniqueName = Guid.NewGuid().ToString() + ext;
             var filePath = Path.Combine(uploadsFolder, uniqueName);
 
             using var stream = new FileStream(filePath, FileMode.Create);
@@ -128,12 +159,14 @@ namespace Football_Match.Controllers
             return Json(new { path = "/uploads/chat/" + uniqueName, type = mediaType });
         }
 
+        // 3. صفحة النجاح
         public IActionResult Success()
         {
             ViewBag.Message = TempData["SuccessMessage"] ?? "تم الحفظ بنجاح!";
             return View();
         }
 
+        // 4. غرفة الحضور
         public async Task<IActionResult> Room()
         {
             var attendances = await _context.Attendances
@@ -149,21 +182,22 @@ namespace Football_Match.Controllers
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
-            var currentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
-
-            ViewBag.CurrentAttendanceId = currentAttendanceId;
+            ViewBag.CurrentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
             ViewBag.Messages = messages;
 
             return View(attendances);
         }
 
+        // 5. Login Admin GET
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
+        // 6. Login Admin POST
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Login(string username, string password)
         {
             if (username == "Bruce" && password == "951753")
@@ -176,39 +210,49 @@ namespace Football_Match.Controllers
             return View();
         }
 
-        public IActionResult Admin()
+        // 7. Admin Panel
+        public async Task<IActionResult> Admin()
         {
             if (HttpContext.Session.GetString("IsAdmin") != "true")
-            {
                 return RedirectToAction("Login");
-            }
 
-            var responses = _context.Attendances.AsNoTracking().OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt).ToList();
+            var responses = await _context.Attendances
+                .AsNoTracking()
+                .OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt)
+                .ToListAsync();
+
             return View(responses);
         }
 
+        // 8. حذف (Admin)
         [HttpPost]
-        public IActionResult Delete(int id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
         {
             if (HttpContext.Session.GetString("IsAdmin") != "true")
-            {
                 return RedirectToAction("Login");
-            }
 
-            var attendance = _context.Attendances.Find(id);
+            var attendance = await _context.Attendances.FindAsync(id);
             if (attendance != null)
             {
                 _context.Attendances.Remove(attendance);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
             return RedirectToAction("Admin");
         }
 
+        // 9. تسجيل خروج
         public IActionResult Logout()
         {
-            HttpContext.Session.Remove("IsAdmin");
+            HttpContext.Session.Clear();
             return RedirectToAction("Index");
+        }
+
+        // 10. Error page
+        public IActionResult Error()
+        {
+            return View();
         }
     }
 }

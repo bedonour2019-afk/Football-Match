@@ -1,5 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+Ôªøusing System.ComponentModel.DataAnnotations.Schema;
 
 namespace Football_Match.Models
 {
@@ -7,27 +6,21 @@ namespace Football_Match.Models
     {
         public int Id { get; set; }
 
-        // „‰ √—”· «·—”«·…
         public int AttendanceId { get; set; }
 
         [ForeignKey("AttendanceId")]
         public Attendance? Sender { get; set; }
 
-        // ‰’ «·—”«·… («Œ Ì«—Ì ·Ê ›ÌÂ „ÌœÌ«)
         public string? Content { get; set; }
 
-        // „”«— «·’Ê—… √Ê «·›ÌœÌÊ
         public string? MediaPath { get; set; }
 
-        // ‰Ê⁄ «·„ÌœÌ«: "image" √Ê "video"
         public string? MediaType { get; set; }
 
         public DateTime SentAt { get; set; } = DateTime.Now;
 
-        // Â·  „ Õ–› «·—”«·…ø
         public bool IsDeleted { get; set; } = false;
 
-        // Reactions ⁄·Ï «·—”«·…
         public ICollection<MessageReaction> Reactions { get; set; } = new List<MessageReaction>();
     }
 }

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Football_Match;
 using Football_Match.Hubs;
 
@@ -6,45 +6,58 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// Session - مدة 24 ساعة
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(24);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
+// قاعدة البيانات
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Server=(localdb)\\MSSQLLocalDB;Database=FootballMatchDb;Trusted_Connection=True;MultipleActiveResultSets=true;Connect Timeout=30",
+        builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
             errorNumbersToAdd: null
         )
     ));
 
-builder.Services.AddSignalR();
+// SignalR مع دعم Long Polling لـ shared hosting
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+});
 
+// رفع حجم الملفات
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 100 * 1024 * 1024;
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 50 * 1024 * 1024;
 });
 
 var app = builder.Build();
 
-// تشغيل المايجريشن بأمان تام من غير ما يوقع الموقع لو حصلت مشكلة
+// تشغيل Migration تلقائياً
 try
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        dbContext.Database.Migrate();
-    }
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
 }
-catch (Exception)
+catch (Exception ex)
 {
-    // تتخطى أي خطأ مؤقت في المايجريشن عشان السيرفر يقوم ومايضربش 500.30
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Migration error on startup");
 }
 
 if (!app.Environment.IsDevelopment())
@@ -64,6 +77,12 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapHub<ChatHub>("/chathub");
+// SignalR مع تفعيل Long Polling كـ fallback
+app.MapHub<ChatHub>("/chathub", options =>
+{
+    options.Transports =
+        Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+        Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+});
 
 app.Run();

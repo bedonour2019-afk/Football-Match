@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+Ôªøusing System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Football_Match.Models
@@ -7,20 +7,18 @@ namespace Football_Match.Models
     {
         public int Id { get; set; }
 
-        // ⁄·Ï √Ì —”«·…
         public int ChatMessageId { get; set; }
 
         [ForeignKey("ChatMessageId")]
         public ChatMessage? ChatMessage { get; set; }
 
-        // „Ì‰ ⁄„· «·—Ì√ﬂ‘‰
         public int AttendanceId { get; set; }
 
         [ForeignKey("AttendanceId")]
         public Attendance? Reacter { get; set; }
 
-        // ‰Ê⁄ «·—Ì√ﬂ‘‰: "laugh" √Ê "sad" √Ê "love"
         [Required]
+        [MaxLength(10)]
         public string ReactionType { get; set; } = string.Empty;
     }
 }

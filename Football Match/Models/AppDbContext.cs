@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Football_Match.Models;
 
 namespace Football_Match
@@ -17,12 +17,23 @@ namespace Football_Match
         {
             base.OnModelCreating(modelBuilder);
 
-            // إلغاء الحذف المتتابع لمنع تضارب Foreign Key
             modelBuilder.Entity<MessageReaction>()
                 .HasOne(r => r.ChatMessage)
-                .WithMany()
+                .WithMany(m => m.Reactions)
                 .HasForeignKey(r => r.ChatMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MessageReaction>()
+                .HasOne(r => r.Reacter)
+                .WithMany(a => a.MessageReactions)
+                .HasForeignKey(r => r.AttendanceId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany(a => a.ChatMessages)
+                .HasForeignKey(m => m.AttendanceId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
