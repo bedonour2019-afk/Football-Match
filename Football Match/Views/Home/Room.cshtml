@@ -1134,19 +1134,20 @@
                     cancelMedia();
                 }
 
-                await connection.invoke("SendMessage", content, mPath, mType);
+                await connection.invoke("SendMessage", currentId, content, mPath, mType);
                 inp.value = "";
                 autoResize(inp);
             }
 
             async function deleteMessage(id) {
+                if (currentId === 0) return;
                 if (!confirm("هل انت متأكد من حذف هذه الرسالة؟")) return;
-                await connection.invoke("DeleteMessage", id);
+                await connection.invoke("DeleteMessage", currentId, id);
             }
 
             async function sendReaction(id, type) {
                 if (currentId === 0) return;
-                await connection.invoke("AddReaction", id, type);
+                await connection.invoke("AddReaction", currentId, id, type);
             }
 
             // DOM Rendering Helper

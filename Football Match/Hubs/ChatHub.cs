@@ -16,27 +16,20 @@ namespace Football_Match.Hubs
             _logger = logger;
         }
 
-        private int? GetCurrentAttendanceId()
-        {
-            var httpContext = Context.GetHttpContext();
-            return httpContext?.Session.GetInt32("AttendanceId");
-        }
-
-        public async Task SendMessage(string content, string? mediaPath, string? mediaType)
+        public async Task SendMessage(int attendanceId, string content, string? mediaPath, string? mediaType)
         {
             try
             {
-                var attendanceId = GetCurrentAttendanceId();
-                if (attendanceId == null)
+                if (attendanceId <= 0)
                 {
-                    _logger.LogWarning("SendMessage attempted without valid AttendanceId in Session.");
+                    _logger.LogWarning("SendMessage attempted with invalid attendanceId.");
                     return;
                 }
 
-                var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
+                var attendance = await _context.Attendances.FindAsync(attendanceId);
                 if (attendance == null)
                 {
-                    _logger.LogWarning("Attendance record not found for Id: {AttendanceId}", attendanceId.Value);
+                    _logger.LogWarning("Attendance record not found for Id: {AttendanceId}", attendanceId);
                     return;
                 }
 
@@ -46,7 +39,7 @@ namespace Football_Match.Hubs
 
                 var message = new ChatMessage
                 {
-                    AttendanceId = attendanceId.Value,
+                    AttendanceId = attendanceId,
                     Content = hasContent ? content.Trim() : null,
                     MediaPath = hasMedia ? mediaPath : null,
                     MediaType = hasMedia ? mediaType : null,
@@ -61,7 +54,7 @@ namespace Football_Match.Hubs
                 await Clients.All.SendAsync("ReceiveMessage", new
                 {
                     id = message.Id,
-                    senderId = attendanceId.Value,
+                    senderId = attendanceId,
                     senderName = attendance.FriendName,
                     senderPhoto = attendance.ProfilePicturePath ?? "",
                     content = message.Content ?? "",
@@ -78,15 +71,14 @@ namespace Football_Match.Hubs
             }
         }
 
-        public async Task DeleteMessage(int messageId)
+        public async Task DeleteMessage(int attendanceId, int messageId)
         {
             try
             {
-                var attendanceId = GetCurrentAttendanceId();
-                if (attendanceId == null) return;
+                if (attendanceId <= 0) return;
 
                 var message = await _context.ChatMessages
-                    .FirstOrDefaultAsync(m => m.Id == messageId && m.AttendanceId == attendanceId.Value);
+                    .FirstOrDefaultAsync(m => m.Id == messageId && m.AttendanceId == attendanceId);
 
                 if (message == null) return;
 
@@ -102,18 +94,17 @@ namespace Football_Match.Hubs
             }
         }
 
-        public async Task AddReaction(int messageId, string reactionType)
+        public async Task AddReaction(int attendanceId, int messageId, string reactionType)
         {
             try
             {
-                var attendanceId = GetCurrentAttendanceId();
-                if (attendanceId == null) return;
+                if (attendanceId <= 0) return;
 
                 var msgExists = await _context.ChatMessages.AnyAsync(m => m.Id == messageId && !m.IsDeleted);
                 if (!msgExists) return;
 
                 var existing = await _context.MessageReactions
-                    .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId.Value);
+                    .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId);
 
                 if (existing != null)
                 {
@@ -133,7 +124,7 @@ namespace Football_Match.Hubs
                     _context.MessageReactions.Add(new MessageReaction
                     {
                         ChatMessageId = messageId,
-                        AttendanceId = attendanceId.Value,
+                        AttendanceId = attendanceId,
                         ReactionType = reactionType
                     });
                 }

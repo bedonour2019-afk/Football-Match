@@ -1,50 +1,84 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Football_Match</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Football_Match.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Football_Match</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+﻿@section Scripts {
+    <!-- تضمين مكتبة SignalR لو مش موجودة عندك في المشروع -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. إنشاء الاتصال بالـ Hub (تأكد إن المسار /chatHub مطابق لـ Program.cs)
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .withAutomaticReconnect()
+                .build();
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Football_Match - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+            // 2. استقبال الرسائل الجديدة وعرضها في الـ DOM
+            connection.on("ReceiveMessage", function (message) {
+                console.log("رسالة جديدة:", message);
+                
+                const chatContainer = document.getElementById("chatMessagesContainer"); // حط الـ ID بتاع حاوية الرسائل عندك
+                if (!chatContainer) return;
+
+                const isMyMessage = message.senderId == document.getElementById("attendanceId").value;
+                
+                // تصميم شكل الرسالة (تدرجها حسب الكلاسات بتاعتك)
+                const messageHtml = `
+                    <div class="message-item ${isMyMessage ? 'user-message' : 'other-message'}" data-message-id="${message.id}">
+                        <div class="d-flex align-items-center mb-1">
+                            <img src="${message.senderPhoto || '/images/default-avatar.png'}" class="rounded-circle me-2" width="30" height="30" />
+                            <strong>${message.senderName}</strong>
+                            <small class="text-muted ms-2">${message.sentAt}</small>
+                        </div>
+                        <div class="message-body p-2 rounded bg-light">
+                            ${message.content ? `<p class="mb-1">${message.content}</p>` : ''}
+                            ${message.mediaPath ? `<img src="${message.mediaPath}" class="img-fluid rounded" style="max-height: 200px;" />` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+                chatContainer.scrollTop = chatContainer.scrollHeight; // نزول تلقائي لآخر الرسائل
+            });
+
+            // 3. استقبال حدث حذف الرسالة
+            connection.on("MessageDeleted", function (messageId) {
+                const msgElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (msgElement) {
+                    msgElement.remove();
+                }
+            });
+
+            // 4. بدء الاتصال بالـ SignalR
+            connection.start().then(function () {
+                console.log("SignalR Connected Successfully!");
+            }).catch(function (err) {
+                console.error("SignalR Connection Failed: ", err.toString());
+            });
+
+            // 5. حدث الضغط على زر الإرسال
+            const sendBtn = document.getElementById("sendButton");
+            if (sendBtn) {
+                sendBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const attendanceId = parseInt(document.getElementById("attendanceId").value);
+                    const contentInput = document.getElementById("messageInput");
+                    const content = contentInput ? contentInput.value : "";
+
+                    // لو حابب تضيف ميديا مستقبلاً، حددهم هنا
+                    const mediaPath = null;
+                    const mediaType = null;
+
+                    if (!content.trim() && !mediaPath) return;
+
+                    // استدعاء دالة SendMessage في الـ C# Hub بالظبط
+                    connection.invoke("SendMessage", attendanceId, content, mediaPath, mediaType)
+                        .then(() => {
+                            if (contentInput) contentInput.value = ""; // تفريغ الحقل بعد الإرسال
+                        })
+                        .catch(function (err) {
+                            console.error("Error invoking SendMessage:", err.toString());
+                        });
+                });
+            }
+        });
+    </script>
+}
