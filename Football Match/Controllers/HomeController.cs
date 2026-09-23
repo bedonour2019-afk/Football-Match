@@ -3,6 +3,7 @@ using Football_Match;
 using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Football_Match.Services;
 
 namespace Football_Match.Controllers
 {
@@ -11,17 +12,22 @@ namespace Football_Match.Controllers
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<HomeController> _logger;
+        private readonly PushNotificationService _push;
 
-        public HomeController(AppDbContext context, IWebHostEnvironment env, ILogger<HomeController> logger)
+        public HomeController(AppDbContext context, IWebHostEnvironment env, ILogger<HomeController> logger, PushNotificationService push)
         {
             _context = context;
             _env = env;
             _logger = logger;
+            _push = push;
         }
 
         // 1. الصفحة الرئيسية
         public IActionResult Index()
         {
+            if (HttpContext.Session.GetInt32("AttendanceId") != null)
+                return RedirectToAction("Room");
+
             return View();
         }
 
@@ -52,6 +58,8 @@ namespace Football_Match.Controllers
 
                 if (existingAttendance != null)
                 {
+                    var oldStatus = existingAttendance.Status;
+
                     existingAttendance.FriendName = FriendName;
                     existingAttendance.Status = Status;
                     existingAttendance.Note = Note?.Trim();
@@ -65,6 +73,11 @@ namespace Football_Match.Controllers
                     HttpContext.Session.SetInt32("AttendanceId", existingAttendance.Id);
                     HttpContext.Session.SetString("UserName", existingAttendance.FriendName);
                     TempData["SuccessMessage"] = "تم تعديل موقفك بنجاح! ✏️";
+
+                    if (oldStatus != Status)
+                    {
+                        _ = _push.SendToAllAsync("تحديث الموقف 🔄", $"{FriendName} غيّر موقفه إلى: {Status}", excludeAttendanceId: existingAttendance.Id);
+                    }
                 }
                 else
                 {
@@ -86,6 +99,8 @@ namespace Football_Match.Controllers
                     HttpContext.Session.SetInt32("AttendanceId", model.Id);
                     HttpContext.Session.SetString("UserName", model.FriendName);
                     TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
+
+                    _ = _push.SendToAllAsync("تسجيل جديد! 🎉", $"{FriendName} سجّل حضوره في الماتش", excludeAttendanceId: model.Id);
                 }
 
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")

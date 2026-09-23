@@ -1,0 +1,456 @@
+﻿@model IEnumerable<Football_Match.Models.Post>
+@{
+    Layout = null;
+    int currentId = ViewBag.CurrentAttendanceId ?? 0;
+    bool isAdminUser = ViewBag.IsAdmin ?? false;
+    var reactionEmojis = new Dictionary<string, string> {
+        { "like", "👍" }, { "love", "❤️" }, { "haha", "😂" }, { "wow", "😮" }
+    };
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>📝 المنشورات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: #0d0d1a;
+            color: #fff;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0;
+            padding-bottom: 40px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+            .top-bar .title {
+                font-weight: 800;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .back-btn {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.85);
+            padding: 7px 14px;
+            font-size: 0.82rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .back-btn:hover {
+                color: #fff;
+                background: rgba(255,255,255,0.14);
+            }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .alert-box {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.35);
+            color: #fca5a5;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 0.88rem;
+        }
+
+        .create-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .create-card textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            padding: 10px 12px;
+            font-size: 0.92rem;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+            .create-card textarea:focus {
+                outline: none;
+                border-color: #7c3aed;
+            }
+
+        .create-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .file-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .publish-btn {
+            background: #7c3aed;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+            .publish-btn:hover {
+                background: #6d28d9;
+            }
+
+        .post-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .post-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .av {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .av-ph {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(124,58,237,0.2);
+            color: #a855f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .post-author {
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .post-time {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.75rem;
+        }
+
+        .post-del-btn {
+            margin-right: auto;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.35);
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+            .post-del-btn:hover {
+                color: #ef4444;
+            }
+
+        .post-content {
+            font-size: 0.94rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 10px;
+        }
+
+        .post-media img, .post-media video {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .reactions-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .react-form {
+            display: inline;
+        }
+
+        .react-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            color: rgba(255,255,255,0.75);
+            padding: 4px 10px;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+
+            .react-btn.mine {
+                background: rgba(124,58,237,0.25);
+                border-color: rgba(124,58,237,0.5);
+                color: #c4b5fd;
+            }
+
+        .reaction-count {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
+
+        .comments-box {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: flex-start;
+        }
+
+        .comment-bubble {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #a855f7;
+        }
+
+        .comment-del {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+            .comment-del:hover {
+                color: #ef4444;
+            }
+
+        .comment-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+            .comment-form input {
+                flex: 1;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 20px;
+                color: #fff;
+                padding: 7px 14px;
+                font-size: 0.85rem;
+            }
+
+                .comment-form input:focus {
+                    outline: none;
+                    border-color: #7c3aed;
+                }
+
+        .comment-send {
+            background: rgba(124,58,237,0.25);
+            border: 1px solid rgba(124,58,237,0.5);
+            color: #c4b5fd;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            padding: 40px 16px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="title"><i class="fas fa-newspaper" style="color:#a855f7;"></i> المنشورات</div>
+        <a asp-controller="Home" asp-action="Room" class="back-btn"><i class="fas fa-arrow-right"></i> رجوع للغرفة</a>
+    </div>
+
+    <div class="container">
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-box">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="create-card">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <textarea name="content" placeholder="اكتب حاجة للشباب..." maxlength="2000"></textarea>
+                <div class="create-actions">
+                    <label class="file-label">
+                        <i class="fas fa-paperclip"></i>
+                        <span id="fileNameLabel">إرفاق صورة/فيديو</span>
+                        <input type="file" name="media" accept="image/*,video/*" style="display:none;" onchange="document.getElementById('fileNameLabel').innerText = this.files.length ? this.files[0].name : 'إرفاق صورة/فيديو';" />
+                    </label>
+                    <button type="submit" class="publish-btn">نشر</button>
+                </div>
+            </form>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="empty-state">لسه مفيش منشورات، كن أول واحد ينشر! 🚀</div>
+        }
+
+        @foreach (var post in Model)
+        {
+            var isMine = post.AttendanceId == currentId;
+            var reactionGroups = post.Reactions.GroupBy(r => r.ReactionType).ToDictionary(g => g.Key, g => g.Count());
+            var myReaction = post.Reactions.FirstOrDefault(r => r.AttendanceId == currentId)?.ReactionType;
+
+            <div class="post-card">
+                <div class="post-head">
+                    @if (!string.IsNullOrEmpty(post.Author?.ProfilePicturePath))
+                    {
+                        <img class="av" src="@post.Author.ProfilePicturePath" alt="@post.Author.FriendName" />
+                    }
+                    else
+                    {
+                        <div class="av-ph">@((post.Author?.FriendName?.Length ?? 0) > 0 ? post.Author!.FriendName.Substring(0, 1).ToUpper() : "?")</div>
+                    }
+                    <div>
+                        <div class="post-author">@(post.Author?.FriendName ?? "مستخدم")</div>
+                        <div class="post-time">@post.CreatedAt.ToString("d MMM, HH:mm")</div>
+                    </div>
+                    @if (isMine || isAdminUser)
+                    {
+                        <form asp-action="DeletePost" method="post" onsubmit="return confirm('تحذف البوست ده؟');" style="margin-right:auto;">
+                            <input type="hidden" name="id" value="@post.Id" />
+                            <button type="submit" class="post-del-btn"><i class="fas fa-trash"></i></button>
+                        </form>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(post.Content))
+                {
+                    <div class="post-content">@post.Content</div>
+                }
+
+                @if (!string.IsNullOrEmpty(post.MediaPath))
+                {
+                    <div class="post-media">
+                        @if (post.MediaType == "video")
+                        {
+                            <video src="@post.MediaPath" controls></video>
+                        }
+                        else
+                        {
+                            <img src="@post.MediaPath" alt="post media" />
+                        }
+                    </div>
+                }
+
+                <div class="reactions-row">
+                    @foreach (var r in reactionEmojis)
+                    {
+                        <form asp-action="React" method="post" class="react-form">
+                            <input type="hidden" name="postId" value="@post.Id" />
+                            <input type="hidden" name="reactionType" value="@r.Key" />
+                            <button type="submit" class="react-btn @(myReaction == r.Key ? "mine" : "")">
+                                @r.Value @(reactionGroups.ContainsKey(r.Key) ? reactionGroups[r.Key].ToString() : "")
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                <div class="comments-box">
+                    @foreach (var c in post.Comments.OrderBy(c => c.CreatedAt))
+                    {
+                        <div class="comment-item">
+                            <div class="comment-bubble">
+                                <span class="comment-author">@(c.Commenter?.FriendName ?? "مستخدم")</span> — @c.Content
+                            </div>
+                            @if (c.AttendanceId == currentId || isAdminUser)
+                            {
+                                <form asp-action="DeleteComment" method="post" onsubmit="return confirm('تحذف الكومنت ده؟');">
+                                    <input type="hidden" name="id" value="@c.Id" />
+                                    <button type="submit" class="comment-del"><i class="fas fa-times"></i></button>
+                                </form>
+                            }
+                        </div>
+                    }
+
+                    <form asp-action="AddComment" method="post" class="comment-form">
+                        <input type="hidden" name="postId" value="@post.Id" />
+                        <input type="text" name="content" placeholder="اكتب كومنت..." maxlength="1000" required />
+                        <button type="submit" class="comment-send"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        }
+
+    </div>
+</body>
+</html>

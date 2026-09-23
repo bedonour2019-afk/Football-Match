@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Football_Match.Models;
 
 namespace Football_Match
@@ -12,6 +12,10 @@ namespace Football_Match
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<MessageReaction> MessageReactions { get; set; }
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<PostComment> PostComments { get; set; }
+        public DbSet<PostReaction> PostReactions { get; set; }
+        public DbSet<PushSubscriber> PushSubscribers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

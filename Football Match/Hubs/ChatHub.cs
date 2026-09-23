@@ -3,6 +3,7 @@ using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
+using Football_Match.Services;
 
 namespace Football_Match.Hubs
 {
@@ -10,11 +11,13 @@ namespace Football_Match.Hubs
     {
         private readonly AppDbContext _context;
         private readonly ILogger<ChatHub> _logger;
+        private readonly PushNotificationService _push;
 
-        public ChatHub(AppDbContext context, ILogger<ChatHub> logger)
+        public ChatHub(AppDbContext context, ILogger<ChatHub> logger, PushNotificationService push)
         {
             _context = context;
             _logger = logger;
+            _push = push;
         }
 
         public async Task SendMessage(int attendanceId, string content, string? mediaPath, string? mediaType)
@@ -64,6 +67,10 @@ namespace Football_Match.Hubs
                     sentAt = message.SentAt.ToString("HH:mm"),
                     reactions = Array.Empty<object>()
                 });
+
+                // إرسال إشعار للباقي (مش المرسل نفسه)
+                var notifBody = hasContent ? message.Content! : "📎 أرسل مرفق";
+                _ = _push.SendToAllAsync(attendance.FriendName, notifBody, excludeAttendanceId: attendanceId);
             }
             catch (Exception ex)
             {
@@ -73,12 +80,10 @@ namespace Football_Match.Hubs
             }
         }
 
-        public async Task DeleteMessage(int attendanceId, int messageId)
+        public async Task DeleteMessage(int attendanceId, int messageId, bool isAdmin)
         {
             try
             {
-                var isAdmin = Context.GetHttpContext()?.Session.GetString("IsAdmin") == "true";
-
                 if (attendanceId <= 0 && !isAdmin) return;
 
                 var message = await _context.ChatMessages

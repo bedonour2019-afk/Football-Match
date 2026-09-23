@@ -3,6 +3,7 @@ using Football_Match;
 using Football_Match.Models;
 using Football_Match.Hubs;
 using Microsoft.AspNetCore.Http.Connections;
+using Football_Match.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,11 +21,12 @@ builder.Services.AddDistributedMemoryCache();
 // 3. إعداد الـ Session
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromHours(24);
+    options.IdleTimeout = TimeSpan.FromDays(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.Name = ".FootballMatch.Session";
     options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.MaxAge = TimeSpan.FromDays(30);
 });
 
 // 4. إعداد قاعدة البيانات
@@ -46,6 +48,9 @@ builder.Services.AddSignalR(options =>
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
     options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
 });
+
+// 5.5 إعداد سيرفس الإشعارات
+builder.Services.AddScoped<PushNotificationService>();
 
 // 6. رفع الحد الأقصى لحجم الملفات (Kestrel + IIS + FormOptions)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
