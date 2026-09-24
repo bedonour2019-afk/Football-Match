@@ -36,6 +36,11 @@ namespace Football_Match.Controllers
                 return BadRequest();
 
             var attendanceId = HttpContext.Session.GetInt32("AttendanceId");
+            if (attendanceId == null && Request.Cookies.TryGetValue("AttId", out var cookieVal) && int.TryParse(cookieVal, out var cid))
+            {
+                attendanceId = cid;
+                HttpContext.Session.SetInt32("AttendanceId", cid);
+            }
 
             var exists = await _context.PushSubscribers.AnyAsync(s => s.Endpoint == req.Endpoint);
             if (!exists)

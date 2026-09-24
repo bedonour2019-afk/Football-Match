@@ -17,7 +17,22 @@ namespace Football_Match.Controllers
             _logger = logger;
         }
 
-        private int? CurrentAttendanceId => HttpContext.Session.GetInt32("AttendanceId");
+        private int? CurrentAttendanceId
+        {
+            get
+            {
+                var sessionId = HttpContext.Session.GetInt32("AttendanceId");
+                if (sessionId != null) return sessionId;
+
+                if (Request.Cookies.TryGetValue("AttId", out var cookieVal) && int.TryParse(cookieVal, out var id))
+                {
+                    HttpContext.Session.SetInt32("AttendanceId", id);
+                    return id;
+                }
+
+                return null;
+            }
+        }
         private bool IsAdmin => HttpContext.Session.GetString("IsAdmin") == "true";
 
         // 1. عرض كل المنشورات

@@ -22,10 +22,36 @@ namespace Football_Match.Controllers
             _push = push;
         }
 
+        // كوكي دائمة لمدة سنة عشان نتعرف على المستخدم حتى لو السيرفر عمل Restart ومسح الـ Session
+        private int? GetOrRestoreAttendanceId()
+        {
+            var sessionId = HttpContext.Session.GetInt32("AttendanceId");
+            if (sessionId != null) return sessionId;
+
+            if (Request.Cookies.TryGetValue("AttId", out var cookieVal) && int.TryParse(cookieVal, out var id))
+            {
+                HttpContext.Session.SetInt32("AttendanceId", id);
+                return id;
+            }
+
+            return null;
+        }
+
+        private void SetAttendanceCookie(int id)
+        {
+            Response.Cookies.Append("AttId", id.ToString(), new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(365),
+                IsEssential = true,
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax
+            });
+        }
+
         // 1. الصفحة الرئيسية
         public IActionResult Index(bool edit = false)
         {
-            if (!edit && HttpContext.Session.GetInt32("AttendanceId") != null)
+            if (!edit && GetOrRestoreAttendanceId() != null)
                 return RedirectToAction("Room");
 
             return View();
@@ -72,6 +98,7 @@ namespace Football_Match.Controllers
 
                     HttpContext.Session.SetInt32("AttendanceId", existingAttendance.Id);
                     HttpContext.Session.SetString("UserName", existingAttendance.FriendName);
+                    SetAttendanceCookie(existingAttendance.Id);
                     TempData["SuccessMessage"] = "تم تعديل موقفك بنجاح! ✏️";
 
                     if (oldStatus != Status)
@@ -98,6 +125,7 @@ namespace Football_Match.Controllers
 
                     HttpContext.Session.SetInt32("AttendanceId", model.Id);
                     HttpContext.Session.SetString("UserName", model.FriendName);
+                    SetAttendanceCookie(model.Id);
                     TempData["SuccessMessage"] = "تم تسجيل إجابتك بنجاح! 🚀";
 
                     _ = _push.SendToAllAsync("تسجيل جديد! 🎉", $"{FriendName} سجّل حضوره في الماتش", excludeAttendanceId: model.Id);
@@ -185,7 +213,7 @@ namespace Football_Match.Controllers
         // 4. غرفة الحضور والشات (محدثة مع حماية الجلسة)
         public async Task<IActionResult> Room()
         {
-            var currentAttendanceId = HttpContext.Session.GetInt32("AttendanceId");
+            var currentAttendanceId = GetOrRestoreAttendanceId();
 
             // التحقق من وجود Session قبل الدخول لمنع الفشل الصامت عند إرسال الرسائل
             if (currentAttendanceId == null)
@@ -288,7 +316,37 @@ namespace Football_Match.Controllers
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
+            Response.Cookies.Delete("AttId");
             return RedirectToAction("Index");
+        }
+
+        // 11. تغيير الموقف بضغطة واحدة من الروم من غير الرجوع لصفحة التسجيل
+        [HttpPost]
+        public async Task<IActionResult> QuickStatus(string status)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false, message = "من فضلك سجل موقفك الأول" });
+
+            var allowed = new[] { "جاي أكيد", "مش جاي", "احتمال أجي" };
+            if (!allowed.Contains(status))
+                return Json(new { success = false, message = "قيمة غير صحيحة" });
+
+            var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
+            if (attendance == null)
+                return Json(new { success = false, message = "الحساب مش موجود" });
+
+            var oldStatus = attendance.Status;
+            attendance.Status = status;
+            attendance.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            if (oldStatus != status)
+            {
+                _ = _push.SendToAllAsync("تحديث الموقف 🔄", $"{attendance.FriendName} غيّر موقفه إلى: {status}", excludeAttendanceId: attendance.Id);
+            }
+
+            return Json(new { success = true, status = attendance.Status });
         }
 
         // 10. Error page

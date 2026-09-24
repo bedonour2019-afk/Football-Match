@@ -240,6 +240,85 @@
                 border: 1px solid rgba(245,158,11,0.3);
             }
 
+            .status-modal-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 200;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+            }
+
+                .status-modal-overlay.show {
+                    display: flex;
+                }
+
+            .status-modal {
+                background: #14141f;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 18px;
+                padding: 22px;
+                width: 100%;
+                max-width: 380px;
+                text-align: center;
+            }
+
+                .status-modal h3 {
+                    margin: 0 0 6px;
+                    font-size: 1.05rem;
+                }
+
+                .status-modal p {
+                    color: rgba(255,255,255,0.5);
+                    font-size: 0.82rem;
+                    margin: 0 0 18px;
+                }
+
+            .status-option-btn {
+                display: block;
+                width: 100%;
+                padding: 12px;
+                margin-bottom: 10px;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 0.95rem;
+                cursor: pointer;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.1);
+                color: #fff;
+                transition: transform 0.1s;
+            }
+
+                .status-option-btn:active {
+                    transform: scale(0.97);
+                }
+
+                .status-option-btn.going {
+                    border-color: rgba(34,197,94,0.4);
+                    color: #22c55e;
+                }
+
+                .status-option-btn.maybe {
+                    border-color: rgba(245,158,11,0.4);
+                    color: #f59e0b;
+                }
+
+                .status-option-btn.not-going {
+                    border-color: rgba(239,68,68,0.4);
+                    color: #ef4444;
+                }
+
+            .status-modal-cancel {
+                background: none;
+                border: none;
+                color: rgba(255,255,255,0.4);
+                font-size: 0.85rem;
+                margin-top: 4px;
+                cursor: pointer;
+            }
+
             .sidebar-list {
                 overflow-y: auto;
                 flex: 1;
@@ -839,7 +918,7 @@
                 <i class="fas fa-users me-1"></i> الحضور
             </button>
             <a asp-controller="Posts" asp-action="Index" class="back-btn"><i class="fas fa-newspaper"></i> <span class="d-none d-sm-inline">المنشورات</span></a>
-            <a href="/?edit=true" class="back-btn"><i class="fas fa-edit"></i> <span class="d-none d-sm-inline">تعديل موقفك</span></a>
+            <button class="back-btn" onclick="openStatusModal()"><i class="fas fa-edit"></i> <span class="d-none d-sm-inline">تعديل موقفك</span></button>
         </div>
     </div>
 
@@ -1046,6 +1125,18 @@
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
         <button class="lightbox-close" onclick="closeLightbox(event)"><i class="fas fa-times"></i></button>
         <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()" />
+    </div>
+
+    <!-- Quick Status Modal -->
+    <div class="status-modal-overlay" id="statusModalOverlay" onclick="if(event.target===this) closeStatusModal()">
+        <div class="status-modal">
+            <h3>غيّر موقفك من الماتش</h3>
+            <p>اختار موقفك الجديد</p>
+            <button class="status-option-btn going" onclick="submitQuickStatus('جاي أكيد')">✅ جاي أكيد</button>
+            <button class="status-option-btn maybe" onclick="submitQuickStatus('احتمال أجي')">❓ احتمال أجي</button>
+            <button class="status-option-btn not-going" onclick="submitQuickStatus('مش جاي')">❌ مش جاي</button>
+            <button class="status-modal-cancel" onclick="closeStatusModal()">إلغاء</button>
+        </div>
     </div>
 
     <!-- SignalR Script -->
@@ -1399,6 +1490,36 @@
 
             if ("serviceWorker" in navigator) {
                 navigator.serviceWorker.register("/sw.js").catch(err => console.error("SW auto-register failed:", err));
+            }
+
+            function openStatusModal() {
+                document.getElementById("statusModalOverlay").classList.add("show");
+            }
+
+            function closeStatusModal() {
+                document.getElementById("statusModalOverlay").classList.remove("show");
+            }
+
+            async function submitQuickStatus(status) {
+                try {
+                    const res = await fetch("/Home/QuickStatus", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: "status=" + encodeURIComponent(status)
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        closeStatusModal();
+                        showToast("تم تحديث موقفك ✅");
+                        setTimeout(() => location.reload(), 700);
+                    } else {
+                        alert(data.message || "حصلت مشكلة، حاول تاني");
+                    }
+                } catch (err) {
+                    console.error("QuickStatus error:", err);
+                    alert("حصلت مشكلة في الاتصال بالسيرفر");
+                }
             }
 
             scrollBottom();
