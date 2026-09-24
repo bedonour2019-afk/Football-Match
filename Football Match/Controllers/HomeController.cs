@@ -23,9 +23,9 @@ namespace Football_Match.Controllers
         }
 
         // 1. الصفحة الرئيسية
-        public IActionResult Index()
+        public IActionResult Index(bool edit = false)
         {
-            if (HttpContext.Session.GetInt32("AttendanceId") != null)
+            if (!edit && HttpContext.Session.GetInt32("AttendanceId") != null)
                 return RedirectToAction("Room");
 
             return View();
