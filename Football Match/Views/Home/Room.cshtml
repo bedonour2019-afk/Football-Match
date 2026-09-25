@@ -4,6 +4,7 @@
     var messages = ViewBag.Messages as IEnumerable<Football_Match.Models.ChatMessage>;
     int currentId = ViewBag.CurrentAttendanceId ?? 0;
     bool isAdminUser = ViewBag.IsAdmin ?? false;
+    var currentUser = Model.FirstOrDefault(a => a.Id == currentId);
     var goingList = Model.Where(m => m.Status == "جاي أكيد").ToList();
     var notGoingList = Model.Where(m => m.Status == "مش جاي").ToList();
     var maybeList = Model.Where(m => m.Status == "احتمال أجي").ToList();
@@ -929,6 +930,9 @@
             <div class="subtitle">@Model.Count() مسجّل &nbsp;|&nbsp; @goingList.Count جايين أكيد</div>
         </div>
         <div class="header-actions">
+            <button class="back-btn" onclick="openSettingsModal()" title="الإعدادات">
+                <i class="fas fa-cog"></i>
+            </button>
             <button id="pushBtn" class="back-btn" onclick="enablePushNotifications()" title="فعّل الإشعارات">
                 <i class="fas fa-bell"></i> <span class="d-none d-sm-inline">فعّل الإشعارات</span>
             </button>
@@ -1164,8 +1168,65 @@
         </div>
     </div>
 
+    <!-- Settings Menu Modal -->
+    <div class="status-modal-overlay" id="settingsModalOverlay" onclick="if(event.target===this) closeSettingsModal()">
+        <div class="status-modal">
+            <h3>الإعدادات</h3>
+            <p>تحكم في حسابك وخياراتك</p>
+            <a href="/Home/Login" class="status-option-btn" style="display:block;text-decoration:none;">
+                <i class="fas fa-user-shield me-1"></i> تسجيل دخول الأدمن
+            </a>
+            <button class="status-option-btn" onclick="closeSettingsModal(); openAccountModal();">
+                <i class="fas fa-user-edit me-1"></i> تعديل الحساب
+            </button>
+            <a href="/Home/Logout" class="status-option-btn not-going" style="display:block;text-decoration:none;" onclick="return confirm('هل تريد تسجيل الخروج؟');">
+                <i class="fas fa-sign-out-alt me-1"></i> تسجيل الخروج
+            </a>
+            <button class="status-modal-cancel" onclick="closeSettingsModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- Account Edit Modal -->
+    <div class="status-modal-overlay" id="accountModalOverlay" onclick="if(event.target===this) closeAccountModal()">
+        <div class="status-modal" style="text-align:right;">
+            <h3 style="text-align:center;">تعديل الحساب</h3>
+            <form asp-controller="Home" asp-action="UpdateAccount" method="post" enctype="multipart/form-data">
+                <div style="text-align:center;margin-bottom:14px;">
+                    <label for="accPhoto" style="cursor:pointer;display:inline-block;">
+                        @if (!string.IsNullOrEmpty(currentUser?.ProfilePicturePath))
+                        {
+                            <img src="@currentUser.ProfilePicturePath" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid rgba(124,58,237,0.5);" />
+                        }
+                        else
+                        {
+                            <div style="width:70px;height:70px;border-radius:50%;background:rgba(124,58,237,0.2);color:#a855f7;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;margin:0 auto;">
+                                @((currentUser?.FriendName?.Length ?? 0) > 0 ? currentUser!.FriendName.Substring(0,1).ToUpper() : "?")
+                            </div>
+                        }
+                        <div style="color:rgba(255,255,255,0.4);font-size:0.75rem;margin-top:4px;">دوس لتغيير الصورة</div>
+                    </label>
+                    <input type="file" id="accPhoto" name="profilePhoto" accept="image/*" style="display:none;" />
+                </div>
+
+                <label style="font-size:0.8rem;color:rgba(255,255,255,0.5);">الاسم</label>
+                <input type="text" name="FriendName" value="@currentUser?.FriendName" required maxlength="100"
+                       style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;padding:9px 12px;margin:4px 0 12px;font-size:0.92rem;" />
+
+                <label style="font-size:0.8rem;color:rgba(255,255,255,0.5);">رقم الموبايل</label>
+                <input type="tel" name="PhoneNumber" value="@currentUser?.PhoneNumber" required maxlength="20"
+                       style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;padding:9px 12px;margin:4px 0 16px;font-size:0.92rem;" />
+
+                <button type="submit" class="status-option-btn going" style="border:none;">
+                    <i class="fas fa-check me-1"></i> حفظ التعديلات
+                </button>
+            </form>
+            <button class="status-modal-cancel" onclick="closeAccountModal()">إلغاء</button>
+        </div>
+    </div>
+
     <!-- SignalR Script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
     <script>
             const currentId = @currentId;
             const isAdminUser = @(isAdminUser ? "true" : "false");
@@ -1525,6 +1586,43 @@
                 document.getElementById("statusModalOverlay").classList.remove("show");
             }
 
+            function openSettingsModal() {
+                document.getElementById("settingsModalOverlay").classList.add("show");
+            }
+
+            function closeSettingsModal() {
+                document.getElementById("settingsModalOverlay").classList.remove("show");
+            }
+
+            function openAccountModal() {
+                document.getElementById("accountModalOverlay").classList.add("show");
+            }
+
+            function closeAccountModal() {
+                document.getElementById("accountModalOverlay").classList.remove("show");
+            }
+
+            const accPhotoInput = document.getElementById("accPhoto");
+            if (accPhotoInput) {
+                accPhotoInput.addEventListener("change", function () {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            const label = this.closest("label");
+                            let img = label.querySelector("img");
+                            if (!img) {
+                                label.querySelector("div").style.display = "none";
+                                img = document.createElement("img");
+                                img.style.cssText = "width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid rgba(124,58,237,0.5);";
+                                label.insertBefore(img, label.firstChild);
+                            }
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+            }
+
             async function submitQuickStatus(status) {
                 try {
                     const res = await fetch("/Home/QuickStatus", {
@@ -1545,6 +1643,15 @@
                     console.error("QuickStatus error:", err);
                     alert("حصلت مشكلة في الاتصال بالسيرفر");
                 }
+            }
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SuccessMessage"])));</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>alert(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["ErrorMessage"])));</text>
             }
 
             scrollBottom();

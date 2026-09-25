@@ -171,6 +171,51 @@ namespace Football_Match.Controllers
             return "/uploads/profiles/" + uniqueName;
         }
 
+        // تعديل بيانات الحساب (الاسم / رقم الموبايل / الصورة) من قايمة الإعدادات في الروم
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAccount(string PhoneNumber, string FriendName, IFormFile? profilePhoto)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return RedirectToAction("Index");
+
+            var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
+            if (attendance == null)
+                return RedirectToAction("Index");
+
+            PhoneNumber = (PhoneNumber ?? "").Trim();
+            FriendName = (FriendName ?? "").Trim();
+
+            if (string.IsNullOrEmpty(PhoneNumber) || string.IsNullOrEmpty(FriendName))
+            {
+                TempData["ErrorMessage"] = "رقم الموبايل والاسم مطلوبان!";
+                return RedirectToAction("Room");
+            }
+
+            try
+            {
+                attendance.PhoneNumber = PhoneNumber;
+                attendance.FriendName = FriendName;
+                attendance.UpdatedAt = DateTime.Now;
+
+                if (profilePhoto != null && profilePhoto.Length > 0)
+                    attendance.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
+
+                await _context.SaveChangesAsync();
+
+                HttpContext.Session.SetString("UserName", attendance.FriendName);
+                TempData["SuccessMessage"] = "تم تحديث بياناتك بنجاح ✏️";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating account.");
+                TempData["ErrorMessage"] = "حصلت مشكلة أثناء تحديث بياناتك";
+            }
+
+            return RedirectToAction("Room");
+        }
+
         // رفع ميديا الشات (محسنة لتدعم استجابات JSON دائمًا)
         [HttpPost]
         public async Task<IActionResult> UploadMedia(IFormFile file)
