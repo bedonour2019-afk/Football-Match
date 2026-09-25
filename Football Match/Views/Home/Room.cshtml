@@ -357,6 +357,24 @@
                     background: rgba(255,255,255,0.04);
                 }
 
+            .mvp-item {
+                background: linear-gradient(90deg, rgba(245,158,11,0.12), transparent);
+                border: 1px solid rgba(245,158,11,0.2);
+            }
+
+            .mvp-avatar {
+                box-shadow: 0 0 0 2px #f59e0b, 0 0 10px rgba(245,158,11,0.5);
+            }
+
+            .mvp-name {
+                color: #f59e0b !important;
+                font-weight: 800 !important;
+            }
+
+            .mvp-crown {
+                margin-left: 3px;
+            }
+
             .avatar {
                 width: 34px;
                 height: 34px;
@@ -967,18 +985,24 @@
                             <div class="section-title">@group.title</div>
                             @foreach (var a in group.list)
                             {
-                                <div class="attendee-item" data-name="@a.FriendName.ToLower()">
+                                <div class="attendee-item @(a.IsMVP ? "mvp-item" : "")" data-name="@a.FriendName.ToLower()">
                                     @if (!string.IsNullOrEmpty(a.ProfilePicturePath))
                                     {
-                                        <img class="avatar" src="@a.ProfilePicturePath" alt="@a.FriendName" />
+                                        <img class="avatar @(a.IsMVP ? "mvp-avatar" : "")" src="@a.ProfilePicturePath" alt="@a.FriendName" />
                                     }
                                     else
                                     {
-                                        <div class="avatar-ph" style="background:@group.bg;color:@group.color;">
+                                        <div class="avatar-ph @(a.IsMVP ? "mvp-avatar" : "")" style="background:@group.bg;color:@group.color;">
                                             @(a.FriendName.Length > 0 ? a.FriendName.Substring(0, 1).ToUpper() : "?")
                                         </div>
                                     }
-                                    <span class="attendee-name">@a.FriendName</span>
+                                    <span class="attendee-name @(a.IsMVP ? "mvp-name" : "")">
+                                        @if (a.IsMVP)
+                                        {
+                                            <span class="mvp-crown">👑</span>
+                                        }
+                                        @a.FriendName
+                                    </span>
                                 </div>
                             }
                         </div>
@@ -1002,6 +1026,7 @@
                         string sName = msg.Sender?.FriendName ?? "؟";
                         string sPhoto = msg.Sender?.ProfilePicturePath ?? "";
                         string sLetter = sName.Length > 0 ? sName.Substring(0, 1).ToUpper() : "؟";
+                        bool sIsMvp = msg.Sender?.IsMVP ?? false;
                         <div class="message-wrapper @(isMine ? "mine" : "")" id="msg-@msg.Id" data-msg-id="@msg.Id">
                             @if (!isMine)
                             {
@@ -1018,7 +1043,7 @@
                             <div class="msg-content-wrap">
                                 @if (!isMine)
                                 {
-                                    <div class="msg-sender">@sName</div>
+                                    <div class="msg-sender @(sIsMvp ? "mvp-name" : "")">@(sIsMvp ? "👑 " : "")@sName</div>
                                 }
                                 <div class="msg-bubble">
                                     @if (!string.IsNullOrEmpty(msg.Content))
@@ -1282,7 +1307,7 @@
                 </div>`;
 
                 const inner = `<div class="msg-content-wrap">
-                    ${!isMine ? `<div class="msg-sender">${esc(msg.senderName)}</div>` : ""}
+                    ${!isMine ? `<div class="msg-sender ${msg.senderIsMvp ? "mvp-name" : ""}">${msg.senderIsMvp ? "👑 " : ""}${esc(msg.senderName)}</div>` : ""}
                     <div class="msg-bubble">${msg.content ? `<span class="msg-text">${esc(msg.content)}</span>` : ""}${mediaHtml}</div>
                     <div class="reactions-bar" id="reactions-${msg.id}"></div>
                     ${reactBtns}

@@ -39,6 +39,11 @@
         .room-link { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3); border-radius: 10px; color: #a855f7; padding: 8px 18px; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; }
         .room-link:hover { color: #fff; background: #7c3aed; }
         .note-text { color: rgba(255,255,255,0.4); font-size: 0.82rem; }
+        .mvp-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: rgba(255,255,255,0.5); padding: 6px 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; margin-left: 6px; }
+        .mvp-btn:hover { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.4); }
+        .mvp-btn.active { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1a1200; border-color: #f59e0b; font-weight: 700; }
+        .mvp-row { background: linear-gradient(90deg, rgba(245,158,11,0.08), transparent) !important; }
+        .mvp-name-gold { color: #f59e0b !important; font-weight: 800 !important; }
     </style>
 </head>
 <body>
@@ -90,7 +95,7 @@
             <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr class="@(item.IsMVP ? "mvp-row" : "")">
                         <td>
                             @if (!string.IsNullOrEmpty(item.ProfilePicturePath))
                             {
@@ -103,7 +108,13 @@
                                 </div>
                             }
                         </td>
-                        <td style="font-weight:600;">@item.FriendName</td>
+                        <td style="font-weight:600;" class="@(item.IsMVP ? "mvp-name-gold" : "")">
+                            @if (item.IsMVP)
+                            {
+                                <span>👑</span>
+                            }
+                            @item.FriendName
+                        </td>
                         <td style="color:rgba(255,255,255,0.5);font-size:0.87rem;">@item.PhoneNumber</td>
                         <td>
                             @if (item.Status == "جاي أكيد")
@@ -118,6 +129,12 @@
                             @((item.UpdatedAt ?? item.RespondedAt).ToString("g"))
                         </td>
                         <td class="text-center">
+                            <form asp-action="SetMVP" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="mvp-btn @(item.IsMVP ? "active" : "")" title="نجم المباراة">
+                                    👑
+                                </button>
+                            </form>
                             <form asp-action="Delete" method="post" onsubmit="return confirm('هل أنت متأكد من مسح هذه الإجابة؟');" style="display:inline;">
                                 <input type="hidden" name="id" value="@item.Id" />
                                 <button type="submit" class="del-form-btn"><i class="fas fa-trash me-1"></i>حذف</button>

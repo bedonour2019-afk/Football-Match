@@ -27,8 +27,11 @@ namespace Football_Match.Models
         // لتخزين تاريخ التعديل إذا قام بالتعديل
         public DateTime? UpdatedAt { get; set; }
 
+        // نجم المباراة (يحدده الأدمن)
+        public bool IsMVP { get; set; } = false;
+
         // Navigation Properties
         public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
         public ICollection<MessageReaction> MessageReactions { get; set; } = new List<MessageReaction>();
     }
-}
+}

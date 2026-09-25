@@ -61,6 +61,7 @@ namespace Football_Match.Hubs
                     senderId = attendanceId,
                     senderName = attendance.FriendName,
                     senderPhoto = attendance.ProfilePicturePath ?? "",
+                    senderIsMvp = attendance.IsMVP,
                     content = message.Content ?? "",
                     mediaPath = message.MediaPath ?? "",
                     mediaType = message.MediaType ?? "",

@@ -312,6 +312,36 @@ namespace Football_Match.Controllers
             return RedirectToAction("Admin");
         }
 
+        // 8.5 تعيين نجم المباراة (Admin) - شخص واحد بس في نفس الوقت
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetMVP(int id)
+        {
+            if (HttpContext.Session.GetString("IsAdmin") != "true")
+                return RedirectToAction("Login");
+
+            var target = await _context.Attendances.FindAsync(id);
+            if (target != null)
+            {
+                var makingMvp = !target.IsMVP;
+
+                // إلغاء اللقب من أي حد تاني كان حامله قبل كده
+                var currentMvps = await _context.Attendances.Where(a => a.IsMVP).ToListAsync();
+                foreach (var a in currentMvps)
+                    a.IsMVP = false;
+
+                target.IsMVP = makingMvp;
+                await _context.SaveChangesAsync();
+
+                if (makingMvp)
+                {
+                    _ = _push.SendToAllAsync("نجم المباراة 👑", $"{target.FriendName} أفضل لاعب في الماتش!", excludeAttendanceId: target.Id);
+                }
+            }
+
+            return RedirectToAction("Admin");
+        }
+
         // 9. تسجيل خروج
         public IActionResult Logout()
         {
