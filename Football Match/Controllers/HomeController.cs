@@ -387,6 +387,32 @@ namespace Football_Match.Controllers
             return RedirectToAction("Admin");
         }
 
+        // 8.6 تعديل اسم/صورة أي شخص (Admin)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAttendeeAdmin(int id, string newName, IFormFile? profilePhoto)
+        {
+            if (HttpContext.Session.GetString("IsAdmin") != "true")
+                return RedirectToAction("Login");
+
+            newName = (newName ?? "").Trim();
+
+            var target = await _context.Attendances.FindAsync(id);
+            if (target != null)
+            {
+                if (!string.IsNullOrEmpty(newName))
+                    target.FriendName = newName;
+
+                if (profilePhoto != null && profilePhoto.Length > 0)
+                    target.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
+
+                target.UpdatedAt = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Admin");
+        }
+
         // 9. تسجيل خروج
         public IActionResult Logout()
         {

@@ -44,6 +44,20 @@
         .mvp-btn.active { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1a1200; border-color: #f59e0b; font-weight: 700; }
         .mvp-row { background: linear-gradient(90deg, rgba(245,158,11,0.08), transparent) !important; }
         .mvp-name-gold { color: #f59e0b !important; font-weight: 800 !important; }
+        .edit-btn { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 8px; color: #a855f7; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .edit-btn:hover { background: rgba(124,58,237,0.2); color: #fff; }
+        .edit-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
+        .edit-modal-overlay.show { display: flex; }
+        .edit-modal { background: #14141f; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 24px; width: 100%; max-width: 380px; }
+        .edit-modal h3 { margin: 0 0 18px; font-size: 1.05rem; text-align: center; }
+        .edit-modal label { font-size: 0.8rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px; }
+        .edit-modal input[type="text"] { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; padding: 9px 12px; margin-bottom: 16px; font-size: 0.92rem; }
+        .edit-photo-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(124,58,237,0.5); display: block; margin: 0 auto 6px; }
+        .edit-photo-ph { width: 70px; height: 70px; border-radius: 50%; background: rgba(124,58,237,0.2); color: #a855f7; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; margin: 0 auto 6px; }
+        .edit-modal-save { width: 100%; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; border-radius: 10px; color: #fff; padding: 11px; font-weight: 700; font-size: 0.92rem; cursor: pointer; margin-bottom: 10px; }
+        .edit-modal-delete { width: 100%; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; color: #ef4444; padding: 10px; font-weight: 600; font-size: 0.88rem; cursor: pointer; margin-bottom: 10px; }
+        .edit-modal-delete:hover { background: #ef4444; color: #fff; }
+        .edit-modal-cancel { width: 100%; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 0.85rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -135,15 +149,101 @@
                                     👑
                                 </button>
                             </form>
-                            <form asp-action="Delete" method="post" onsubmit="return confirm('هل أنت متأكد من مسح هذه الإجابة؟');" style="display:inline;">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="del-form-btn"><i class="fas fa-trash me-1"></i>حذف</button>
-                            </form>
+                            <button type="button" class="edit-btn"
+                                    data-id="@item.Id"
+                                    data-name="@item.FriendName"
+                                    data-photo="@(item.ProfilePicturePath ?? "")"
+                                    onclick="openEditModal(this)">
+                                <i class="fas fa-edit me-1"></i>تعديل
+                            </button>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <!-- Edit Attendee Modal -->
+    <div class="edit-modal-overlay" id="editModalOverlay" onclick="if(event.target===this) closeEditModal()">
+        <div class="edit-modal">
+            <h3>تعديل بيانات الشخص</h3>
+
+            <form id="editForm" asp-action="UpdateAttendeeAdmin" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="editId" />
+
+                <label for="editPhotoInput" style="cursor:pointer;text-align:center;">
+                    <img id="editPhotoPreview" class="edit-photo-preview" src="" style="display:none;" />
+                    <div id="editPhotoPh" class="edit-photo-ph">?</div>
+                    <div style="color:rgba(255,255,255,0.4);font-size:0.72rem;margin-bottom:14px;">دوس لتغيير الصورة</div>
+                </label>
+                <input type="file" id="editPhotoInput" name="profilePhoto" accept="image/*" style="display:none;" onchange="previewEditPhoto(this)" />
+
+                <label>الاسم</label>
+                <input type="text" name="newName" id="editNameInput" maxlength="100" required />
+
+                <button type="submit" class="edit-modal-save"><i class="fas fa-check me-1"></i>حفظ التعديلات</button>
+            </form>
+
+            <form id="deleteForm" asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="deleteId" />
+            </form>
+            <button type="button" class="edit-modal-delete" onclick="confirmDeleteFromModal()">
+                <i class="fas fa-trash me-1"></i>حذف هذا الشخص نهائيًا
+            </button>
+
+            <button type="button" class="edit-modal-cancel" onclick="closeEditModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(btn) {
+            const id = btn.dataset.id;
+            const name = btn.dataset.name;
+            const photo = btn.dataset.photo;
+
+            document.getElementById("editId").value = id;
+            document.getElementById("deleteId").value = id;
+            document.getElementById("editNameInput").value = name;
+
+            const preview = document.getElementById("editPhotoPreview");
+            const ph = document.getElementById("editPhotoPh");
+            if (photo) {
+                preview.src = photo;
+                preview.style.display = "block";
+                ph.style.display = "none";
+            } else {
+                preview.style.display = "none";
+                ph.style.display = "flex";
+                ph.textContent = name.length > 0 ? name.substring(0, 1).toUpperCase() : "?";
+            }
+
+            document.getElementById("editModalOverlay").classList.add("show");
+        }
+
+        function closeEditModal() {
+            document.getElementById("editModalOverlay").classList.remove("show");
+        }
+
+        function previewEditPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const preview = document.getElementById("editPhotoPreview");
+                    document.getElementById("editPhotoPh").style.display = "none";
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function confirmDeleteFromModal() {
+            if (confirm("هل أنت متأكد من مسح هذا الشخص نهائيًا؟")) {
+                document.getElementById("deleteForm").submit();
+            }
+        }
+    </script>
 </body>
 </html>
