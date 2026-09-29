@@ -500,7 +500,161 @@
             .sidebar-backdrop.show { display: block; }
             .message-wrapper { max-width: 88%; }
             .posts-section { max-height: 40vh; }
+        /* ===== DIRECT CHAT (SHAT KHAS) ===== */
+        .direct-chat-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            backdrop-filter: blur(8px);
         }
+        .direct-chat-overlay.show { display: flex; }
+        .direct-chat-box {
+            background: #141424;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 480px;
+            height: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            animation: fadeIn 0.2s ease;
+        }
+        .direct-chat-header {
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .direct-chat-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .direct-chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(124,58,237,0.4);
+        }
+        .direct-chat-avatar-ph {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(124,58,237,0.25);
+            color: #c084fc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .direct-chat-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #fff;
+        }
+        .direct-chat-sub {
+            font-size: 0.7rem;
+            color: rgba(34,197,94,0.9);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .direct-chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+        .direct-chat-body::-webkit-scrollbar { width: 3px; }
+        .direct-chat-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .dm-bubble-wrap {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            animation: fadeIn 0.15s ease;
+        }
+        .dm-bubble-wrap.mine {
+            margin-left: auto;
+            align-items: flex-end;
+        }
+        .dm-bubble-wrap.other {
+            margin-right: auto;
+            align-items: flex-start;
+        }
+        .dm-bubble {
+            padding: 9px 13px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+        .dm-bubble-wrap.mine .dm-bubble {
+            background: linear-gradient(135deg, #7c3aed, #9333ea);
+            color: #fff;
+            border-bottom-left-radius: 4px;
+        }
+        .dm-bubble-wrap.other .dm-bubble {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+        .dm-time {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
+            padding: 0 4px;
+        }
+        .direct-chat-footer {
+            padding: 10px 14px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .dm-input {
+            flex: 1;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: #fff;
+            padding: 9px 14px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .dm-input:focus { border-color: #a855f7; }
+        .dm-send-btn {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border: none;
+            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+        }
+        .dm-send-btn:hover { transform: scale(1.06); }
     </style>
 </head>
 <body>
@@ -977,6 +1131,34 @@
         <button class="profile-popup-btn" onclick="closeProfilePopup()" style="color:rgba(255,255,255,0.4);"><i class="fas fa-times"></i> إغلاق</button>
     </div>
 
+    <!-- Direct Chat Modal (شات خاص) -->
+    <div class="direct-chat-overlay" id="directChatOverlay" onclick="if(event.target===this) closeDirectChat()">
+        <div class="direct-chat-box">
+            <div class="direct-chat-header">
+                <div class="direct-chat-user" id="dmUserHeader" onclick="viewDmUserProfile()">
+                    <div id="dmAvatarWrap"></div>
+                    <div>
+                        <div class="direct-chat-name" id="dmUserName"></div>
+                        <div class="direct-chat-sub"><i class="fas fa-lock"></i> محادثة خاصة وسرية</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <button class="action-icon-btn" onclick="viewDmUserProfile()" title="الملف الشخصي" style="font-size:0.85rem;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,0.06);color:#fff;"><i class="fas fa-user"></i></button>
+                    <button class="action-icon-btn" onclick="closeDirectChat()" title="إغلاق" style="font-size:1.1rem;padding:5px 9px;color:rgba(255,255,255,0.7);"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="direct-chat-body" id="dmMessagesBody">
+                <div id="dmLoading" style="text-align:center;padding:35px;color:rgba(255,255,255,0.4);font-size:0.85rem;">
+                    <i class="fas fa-spinner fa-spin me-2"></i> جاري فتح المحادثة...
+                </div>
+            </div>
+            <div class="direct-chat-footer">
+                <input type="text" class="dm-input" id="dmInput" placeholder="اكتب رسالة خاصة..." onkeydown="if(event.key==='Enter') sendDirectMsg();" />
+                <button class="dm-send-btn" onclick="sendDirectMsg()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
     <!-- Stories Data for JS -->
     <script id="storiesData" type="application/json">
         @Html.Raw(System.Text.Json.JsonSerializer.Serialize(stories.Select(s => new {
@@ -1052,6 +1234,20 @@
                 c.innerHTML = r.type + " <span>" + r.count + "</span>";
                 bar.appendChild(c);
             });
+        });
+
+        connection.on("ReceiveDirectMessage", msg => {
+            if ((msg.senderId === currentId && msg.receiverId === activeDmUserId) ||
+                (msg.senderId === activeDmUserId && msg.receiverId === currentId)) {
+                appendDmBubble({
+                    content: msg.content,
+                    sentAt: msg.sentAt,
+                    isMine: msg.senderId === currentId
+                });
+                scrollDmBottom();
+            } else if (msg.receiverId === currentId) {
+                showToast(`💬 رسالة خاصة من ${msg.senderName}: ${msg.content.substring(0, 30)}`);
+            }
         });
 
         // ===== CHAT FUNCTIONS =====
@@ -1525,11 +1721,20 @@
             list.insertBefore(div, loader);
         }
 
-        // ===== PROFILE POPUP =====
+        // ===== PROFILE POPUP & DIRECT CHAT =====
         let popupCurrentId = null;
+        let currentPopupName = '';
+        let currentPopupPhoto = '';
+        let currentPopupIsMvp = false;
+        let activeDmUserId = null;
+
         function showProfilePopup(event, id, name, photo, isMvp) {
             event.stopPropagation();
             popupCurrentId = id;
+            currentPopupName = name;
+            currentPopupPhoto = photo;
+            currentPopupIsMvp = isMvp;
+
             const popup = document.getElementById('profilePopup');
             const avDiv = document.getElementById('ppAvatar');
             avDiv.innerHTML = photo
@@ -1537,7 +1742,10 @@
                 : `<div style="width:48px;height:48px;border-radius:50%;background:rgba(124,58,237,0.2);color:#a855f7;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;margin-bottom:8px;">${esc(name).charAt(0).toUpperCase()}</div>`;
             document.getElementById('ppName').textContent = (isMvp ? '👑 ' : '') + name;
             document.getElementById('ppViewBtn').onclick = () => { window.location.href = '/Home/Profile/' + id; };
-            document.getElementById('ppMsgBtn').onclick = () => { closeProfilePopup(); window.location.href = '/Home/Room'; };
+            document.getElementById('ppMsgBtn').onclick = () => {
+                closeProfilePopup();
+                openDirectChat(id, name, photo, isMvp);
+            };
 
             // Position popup near click
             const x = event.clientX, y = event.clientY;
@@ -1545,7 +1753,6 @@
             popup.style.right = (window.innerWidth - x + 10) + 'px';
             popup.style.left = 'auto';
 
-            // Adjust if goes off screen
             popup.classList.add('show');
             const rect = popup.getBoundingClientRect();
             if (rect.right > window.innerWidth - 10) popup.style.right = '10px';
@@ -1553,8 +1760,118 @@
         }
 
         function closeProfilePopup() {
-            document.getElementById('profilePopup').classList.remove('show');
+            const p = document.getElementById('profilePopup');
+            if (p) p.classList.remove('show');
             popupCurrentId = null;
+        }
+
+        // فتح نافذة الشات الخاص
+        async function openDirectChat(otherUserId, name, photo, isMvp) {
+            if (currentId <= 0) {
+                showToast('يرجى تسجيل موقفك أولاً للتحدث في الخاص');
+                return;
+            }
+            if (otherUserId === currentId) {
+                showToast('لا يمكنك محادثة نفسك!');
+                return;
+            }
+
+            closeProfilePopup();
+            activeDmUserId = otherUserId;
+
+            const overlay = document.getElementById('directChatOverlay');
+            overlay.classList.add('show');
+
+            document.getElementById('dmUserName').textContent = (isMvp ? '👑 ' : '') + (name || 'مستخدم');
+            const avWrap = document.getElementById('dmAvatarWrap');
+            if (photo) {
+                avWrap.innerHTML = `<img class="direct-chat-avatar" src="${photo}" alt="" />`;
+            } else {
+                const letter = (name || '؟').charAt(0).toUpperCase();
+                avWrap.innerHTML = `<div class="direct-chat-avatar-ph">${letter}</div>`;
+            }
+
+            const body = document.getElementById('dmMessagesBody');
+            body.innerHTML = '<div style="text-align:center;padding:35px;color:rgba(255,255,255,0.4);font-size:0.85rem;"><i class="fas fa-spinner fa-spin me-2"></i> جاري تحميل الرسائل...</div>';
+
+            try {
+                const res = await fetch('/Home/GetDirectMessages?otherUserId=' + otherUserId);
+                const d = await res.json();
+                if (d.success) {
+                    document.getElementById('dmUserName').textContent = (d.user.isMvp ? '👑 ' : '') + (d.user.nickname || d.user.name);
+                    if (d.user.photo) {
+                        avWrap.innerHTML = `<img class="direct-chat-avatar" src="${d.user.photo}" alt="" />`;
+                    }
+                    body.innerHTML = '';
+                    if (d.messages.length === 0) {
+                        body.innerHTML = `<div style="text-align:center;padding:50px 20px;color:rgba(255,255,255,0.3);font-size:0.85rem;"><i class="fas fa-lock fa-2x mb-2" style="display:block;opacity:0.4;"></i>ابدأ المحادثة الخاصة مع <b>${esc(d.user.name)}</b><br><span style="font-size:0.75rem;opacity:0.7;">الرسائل خاصة وسرية بينكما فقط 🔒</span></div>`;
+                    } else {
+                        d.messages.forEach(m => appendDmBubble(m));
+                        scrollDmBottom();
+                    }
+                } else {
+                    body.innerHTML = `<div style="text-align:center;padding:35px;color:rgba(255,255,255,0.4);">${d.message || 'حصل خطأ'}</div>`;
+                }
+            } catch(e) {
+                body.innerHTML = '<div style="text-align:center;padding:35px;color:rgba(255,255,255,0.4);">فشل في جلب الرسائل</div>';
+            }
+
+            setTimeout(() => {
+                const inp = document.getElementById('dmInput');
+                if (inp) inp.focus();
+            }, 200);
+        }
+
+        function closeDirectChat() {
+            document.getElementById('directChatOverlay').classList.remove('show');
+            activeDmUserId = null;
+            document.getElementById('dmInput').value = '';
+        }
+
+        function viewDmUserProfile() {
+            if (activeDmUserId) {
+                window.location.href = '/Home/Profile/' + activeDmUserId;
+            }
+        }
+
+        function scrollDmBottom() {
+            const body = document.getElementById('dmMessagesBody');
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function appendDmBubble(msg) {
+            const body = document.getElementById('dmMessagesBody');
+            const isMine = msg.isMine || msg.senderId === currentId;
+            const div = document.createElement('div');
+            div.className = 'dm-bubble-wrap ' + (isMine ? 'mine' : 'other');
+            div.innerHTML = `<div class="dm-bubble">${esc(msg.content)}</div><div class="dm-time">${msg.sentAt || ''}</div>`;
+            body.appendChild(div);
+        }
+
+        async function sendDirectMsg() {
+            const inp = document.getElementById('dmInput');
+            const text = inp.value.trim();
+            if (!text || !activeDmUserId || currentId <= 0) return;
+
+            inp.value = '';
+
+            try {
+                // SignalR instant
+                await connection.invoke("SendDirectMessage", currentId, activeDmUserId, text);
+            } catch(e) {
+                // HTTP fallback
+                const fd = new FormData();
+                fd.append('receiverId', activeDmUserId);
+                fd.append('content', text);
+                const res = await fetch('/Home/SendDirectMessage', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) {
+                    appendDmBubble(d.message);
+                    scrollDmBottom();
+                } else {
+                    showToast(d.message || 'حصل خطأ');
+                }
+            }
         }
 
         document.addEventListener('click', (e) => {
@@ -1564,6 +1881,20 @@
             if (!e.target.closest('.emoji-picker') && !e.target.closest('.action-btn')) {
                 const p = document.getElementById("emojiPicker");
                 if (p && p.classList.contains("show")) p.classList.remove("show");
+            }
+        });
+
+        // فحص هل المستخدم جاي من صفحة بروفايل عشان يفتح الشات الخاص مباشرة (?dm=ID)
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dmTargetId = urlParams.get('dm');
+            if (dmTargetId) {
+                const idNum = parseInt(dmTargetId);
+                const targetEl = document.querySelector(`.attendee-item[data-id="${dmTargetId}"]`);
+                const name = targetEl ? (targetEl.querySelector('.attendee-name')?.textContent?.trim() || '') : '';
+                const img = targetEl ? targetEl.querySelector('img') : null;
+                const photo = img ? img.src : '';
+                openDirectChat(idNum, name, photo, false);
             }
         });
 

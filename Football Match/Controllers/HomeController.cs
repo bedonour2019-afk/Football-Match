@@ -723,7 +723,7 @@ namespace Football_Match.Controllers
             }
         }
 
-        // API: الرد على ستوري — يبعت رسالة في الشات
+        // API: الرد على ستوري — يتبعت في الخاص مع محتوى الستوري
         [HttpPost]
         public async Task<IActionResult> ReplyToStory(int storyId, string replyText)
         {
@@ -751,21 +751,139 @@ namespace Football_Match.Controllers
                 : story.Content;
 
             var messageContent = story.MediaPath != null
-                ? $"↩️ رد على ستوري {story.Author?.FriendName}: {replyText}\n[📸 محتوى مرئي]"
-                : $"↩️ رد على ستوري {story.Author?.FriendName}: \"{storyPreview}\"\n{replyText}";
+                ? $"↩️ رد على ستوريك: {replyText}\n[📸 محتوى مرئي]"
+                : $"↩️ رد على ستوريك: \"{storyPreview}\"\n{replyText}";
 
-            var message = new ChatMessage
+            // 1. إرسال في الخاص لصاحب الستوري
+            try
             {
-                AttendanceId = attendanceId.Value,
-                Content = messageContent,
-                SentAt = DateTime.Now,
-                IsDeleted = false
-            };
+                var dm = new DirectMessage
+                {
+                    SenderId = attendanceId.Value,
+                    ReceiverId = story.AttendanceId,
+                    Content = messageContent,
+                    SentAt = DateTime.Now,
+                    IsRead = false,
+                    IsDeleted = false
+                };
+                _context.DirectMessages.Add(dm);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not save direct message for story reply.");
+            }
 
-            _context.ChatMessages.Add(message);
-            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "تم إرسال الرد في الخاص ✅" });
+        }
 
-            return Json(new { success = true, message = "تم إرسال الرد في الشات" });
+        // API: جلب رسائل الشات الخاص بين مستخدمين
+        [HttpGet]
+        public async Task<IActionResult> GetDirectMessages(int otherUserId)
+        {
+            var currentId = GetOrRestoreAttendanceId();
+            if (currentId == null)
+                return Json(new { success = false, message = "سجل موقفك أولاً" });
+
+            var otherUser = await _context.Attendances.FindAsync(otherUserId);
+            if (otherUser == null)
+                return Json(new { success = false, message = "المستخدم غير موجود" });
+
+            try
+            {
+                var messages = await _context.DirectMessages
+                    .AsNoTracking()
+                    .Where(m => !m.IsDeleted &&
+                        ((m.SenderId == currentId.Value && m.ReceiverId == otherUserId) ||
+                         (m.SenderId == otherUserId && m.ReceiverId == currentId.Value)))
+                    .OrderBy(m => m.SentAt)
+                    .Select(m => new
+                    {
+                        m.Id,
+                        m.SenderId,
+                        m.ReceiverId,
+                        m.Content,
+                        m.MediaPath,
+                        m.MediaType,
+                        sentAt = m.SentAt.ToString("HH:mm"),
+                        isMine = m.SenderId == currentId.Value
+                    })
+                    .ToListAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    user = new
+                    {
+                        id = otherUser.Id,
+                        name = otherUser.FriendName,
+                        nickname = otherUser.Nickname,
+                        photo = otherUser.ProfilePicturePath,
+                        isMvp = otherUser.IsMVP
+                    },
+                    messages
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting direct messages.");
+                return Json(new { success = false, message = "حصل خطأ في جلب الرسائل" });
+            }
+        }
+
+        // API: إرسال رسالة خاصة في الشات الخاص
+        [HttpPost]
+        public async Task<IActionResult> SendDirectMessage(int receiverId, string content)
+        {
+            var currentId = GetOrRestoreAttendanceId();
+            if (currentId == null)
+                return Json(new { success = false, message = "سجل موقفك أولاً" });
+
+            if (string.IsNullOrWhiteSpace(content))
+                return Json(new { success = false, message = "اكتب رسالة أولاً" });
+
+            var receiver = await _context.Attendances.FindAsync(receiverId);
+            if (receiver == null)
+                return Json(new { success = false, message = "المستخدم غير موجود" });
+
+            var sender = await _context.Attendances.FindAsync(currentId.Value);
+
+            try
+            {
+                var dm = new DirectMessage
+                {
+                    SenderId = currentId.Value,
+                    ReceiverId = receiverId,
+                    Content = content.Trim(),
+                    SentAt = DateTime.Now,
+                    IsRead = false,
+                    IsDeleted = false
+                };
+
+                _context.DirectMessages.Add(dm);
+                await _context.SaveChangesAsync();
+
+                _ = _push.SendToAllAsync($"رسالة خاصة من {sender?.FriendName}", dm.Content, excludeAttendanceId: currentId.Value);
+
+                return Json(new
+                {
+                    success = true,
+                    message = new
+                    {
+                        dm.Id,
+                        dm.SenderId,
+                        dm.ReceiverId,
+                        dm.Content,
+                        sentAt = dm.SentAt.ToString("HH:mm"),
+                        isMine = true
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending direct message.");
+                return Json(new { success = false, message = "حصل خطأ أثناء إرسال الرسالة" });
+            }
         }
 
         // API: حذف ستوري

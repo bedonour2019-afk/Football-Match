@@ -17,13 +17,23 @@ namespace Football_Match
         public DbSet<PostReaction> PostReactions { get; set; }
         public DbSet<PushSubscriber> PushSubscribers { get; set; }
         public DbSet<Story> Stories { get; set; }
-
-        // متغير عالمي لرقم الفريق الفايز (null = لا يوجد فائز بعد)
-        // تُخزَّن في جدول Settings بسيط أو استخدام static (للتبسيط)
+        public DbSet<DirectMessage> DirectMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<DirectMessage>()
+                .HasOne(d => d.Sender)
+                .WithMany()
+                .HasForeignKey(d => d.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DirectMessage>()
+                .HasOne(d => d.Receiver)
+                .WithMany()
+                .HasForeignKey(d => d.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<MessageReaction>()
                 .HasOne(r => r.ChatMessage)

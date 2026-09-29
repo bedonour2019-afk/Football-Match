@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -102,7 +102,7 @@ namespace Football_Match.Hubs
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting message ID {MessageId} in ChatHub.", messageId);
+                _logger.LogError(ex, "Error occurred while deleting message in ChatHub.");
                 var detail = ex.InnerException?.Message ?? ex.Message;
                 throw new HubException($"DeleteMessage failed: {detail}");
             }
@@ -112,10 +112,8 @@ namespace Football_Match.Hubs
         {
             try
             {
-                if (attendanceId <= 0) return;
-
-                var msgExists = await _context.ChatMessages.AnyAsync(m => m.Id == messageId && !m.IsDeleted);
-                if (!msgExists) return;
+                if (attendanceId <= 0 || messageId <= 0 || string.IsNullOrWhiteSpace(reactionType))
+                    return;
 
                 var existing = await _context.MessageReactions
                     .FirstOrDefaultAsync(r => r.ChatMessageId == messageId && r.AttendanceId == attendanceId);
@@ -124,7 +122,7 @@ namespace Football_Match.Hubs
                 {
                     if (existing.ReactionType == reactionType)
                     {
-                        // إزالة التفاعل (Toggle Off)
+                        // إزالة التفاعل لو ضغط عليه تاني (Toggle)
                         _context.MessageReactions.Remove(existing);
                     }
                     else
@@ -158,6 +156,48 @@ namespace Football_Match.Hubs
                 _logger.LogError(ex, "Error updating reaction for message ID {MessageId} in ChatHub.", messageId);
                 var detail = ex.InnerException?.Message ?? ex.Message;
                 throw new HubException($"AddReaction failed: {detail}");
+            }
+        }
+
+        // إرسال رسالة خاصة في الشات الخاص
+        public async Task SendDirectMessage(int senderId, int receiverId, string content)
+        {
+            try
+            {
+                if (senderId <= 0 || receiverId <= 0 || string.IsNullOrWhiteSpace(content)) return;
+                var sender = await _context.Attendances.FindAsync(senderId);
+                if (sender == null) return;
+                var receiver = await _context.Attendances.FindAsync(receiverId);
+                if (receiver == null) return;
+
+                var dm = new DirectMessage
+                {
+                    SenderId = senderId,
+                    ReceiverId = receiverId,
+                    Content = content.Trim(),
+                    SentAt = DateTime.Now,
+                    IsRead = false,
+                    IsDeleted = false
+                };
+                _context.DirectMessages.Add(dm);
+                await _context.SaveChangesAsync();
+
+                await Clients.All.SendAsync("ReceiveDirectMessage", new
+                {
+                    id = dm.Id,
+                    senderId = senderId,
+                    receiverId = receiverId,
+                    senderName = sender.FriendName,
+                    senderPhoto = sender.ProfilePicturePath ?? "",
+                    content = dm.Content,
+                    sentAt = dm.SentAt.ToString("HH:mm")
+                });
+
+                _ = _push.SendToAllAsync($"رسالة خاصة من {sender.FriendName}", dm.Content, excludeAttendanceId: senderId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending direct message in ChatHub.");
             }
         }
     }
