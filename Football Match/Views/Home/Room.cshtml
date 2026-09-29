@@ -138,8 +138,13 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            position: relative;
         }
+        .main-area::-webkit-scrollbar { width: 4px; }
+        .main-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
         /* ===== STORIES STRIP ===== */
         .stories-strip {
@@ -231,11 +236,18 @@
 
         /* ===== CHAT ===== */
         .chat-area {
-            flex: 1;
+            height: calc(100vh - 190px);
+            min-height: 520px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            min-height: 0;
+            flex-shrink: 0;
+            position: relative;
+        }
+        @@media (max-width: 680px) {
+            .chat-area {
+                height: calc(100dvh - 210px);
+                min-height: 460px;
+            }
         }
 
         .messages-container {
@@ -319,13 +331,55 @@
 
         /* ===== POSTS SECTION ===== */
         .posts-section {
-            border-top: 1px solid rgba(255,255,255,0.07);
-            overflow-y: auto;
+            border-top: 1px solid rgba(255,255,255,0.08);
             flex-shrink: 0;
-            max-height: 45vh;
+            min-height: 80vh;
+            padding-bottom: 90px;
         }
-        .posts-section::-webkit-scrollbar { width: 3px; }
-        .posts-section::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        .posts-teaser-bar {
+            padding: 10px 16px;
+            background: linear-gradient(180deg, rgba(20,20,35,0.95), rgba(13,13,26,0.98));
+            border-top: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .posts-teaser-bar:hover {
+            background: rgba(124,58,237,0.18);
+            color: #fff;
+        }
+        .return-to-chat-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 30px;
+            padding: 10px 18px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(124,58,237,0.45);
+            z-index: 100;
+            transition: all 0.2s;
+        }
+        .return-to-chat-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(124,58,237,0.6);
+        }
 
         .posts-header {
             padding: 10px 14px 6px;
@@ -880,6 +934,13 @@
                 </div>
             </div>
 
+            <!-- Posts Teaser Bar / Scroll Hint -->
+            <div class="posts-teaser-bar" onclick="scrollToPosts()">
+                <i class="fas fa-chevron-down"></i>
+                <span>📝 منشورات الشباب (اسحب للأسفل لعرض المزيد)</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+
             <!-- Posts Section -->
             <div class="posts-section" id="postsSection">
                 <div class="posts-header">
@@ -991,6 +1052,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Return to Chat Button -->
+    <button class="return-to-chat-btn" id="jumpToChatBtn" onclick="scrollToChat()" title="الرجوع للشات">
+        <i class="fas fa-comment-dots"></i>
+        <span>الرجوع للشات</span>
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -1677,14 +1745,31 @@
             }
         }
 
-        // ===== INFINITE SCROLL FOR POSTS =====
-        const postsSection = document.getElementById('postsSection');
-        postsSection.addEventListener('scroll', async () => {
-            const el = postsSection;
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100 && !postsLoading && !postsAllLoaded) {
-                await loadMorePosts();
-            }
-        });
+        // ===== INFINITE SCROLL & SCROLL NAVIGATION =====
+        const mainArea = document.querySelector('.main-area');
+        if (mainArea) {
+            mainArea.addEventListener('scroll', async () => {
+                if (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 250 && !postsLoading && !postsAllLoaded) {
+                    await loadMorePosts();
+                }
+
+                // Show/hide floating return-to-chat button
+                const jumpBtn = document.getElementById('jumpToChatBtn');
+                if (jumpBtn) {
+                    jumpBtn.style.display = mainArea.scrollTop > 350 ? 'flex' : 'none';
+                }
+            });
+        }
+
+        function scrollToPosts() {
+            const ps = document.getElementById('postsSection');
+            if (ps) ps.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToChat() {
+            const ca = document.querySelector('.chat-area');
+            if (ca) ca.scrollIntoView({ behavior: 'smooth' });
+        }
 
         async function loadMorePosts() {
             postsLoading = true;
