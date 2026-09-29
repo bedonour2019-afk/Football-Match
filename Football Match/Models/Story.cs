@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Football_Match.Models
 {
-    public class Post
+    public class Story
     {
         [Key]
         public int Id { get; set; }
@@ -16,7 +15,7 @@ namespace Football_Match.Models
         [ForeignKey(nameof(AttendanceId))]
         public virtual Attendance? Author { get; set; }
 
-        [MaxLength(2000)]
+        [MaxLength(500)]
         public string? Content { get; set; }
 
         [MaxLength(500)]
@@ -27,12 +26,8 @@ namespace Football_Match.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        public DateTime ExpiresAt { get; set; } = DateTime.Now.AddHours(24);
+
         public bool IsDeleted { get; set; } = false;
-
-        // بوست الأدمن المميز
-        public bool IsAdminPost { get; set; } = false;
-
-        public virtual ICollection<PostComment> Comments { get; set; } = new List<PostComment>();
-        public virtual ICollection<PostReaction> Reactions { get; set; } = new List<PostReaction>();
     }
 }

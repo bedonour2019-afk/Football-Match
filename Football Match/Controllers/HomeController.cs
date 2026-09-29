@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Football_Match;
 using Football_Match.Models;
 using Microsoft.EntityFrameworkCore;
@@ -69,9 +69,7 @@ namespace Football_Match.Controllers
             if (string.IsNullOrEmpty(PhoneNumber) || string.IsNullOrEmpty(FriendName))
             {
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
                     return BadRequest(new { success = false, message = "رقم الموبايل والاسم مطلوبان!" });
-                }
 
                 TempData["ErrorMessage"] = "رقم الموبايل والاسم مطلوبان!";
                 return RedirectToAction("Index");
@@ -85,7 +83,6 @@ namespace Football_Match.Controllers
                 if (existingAttendance != null)
                 {
                     var oldStatus = existingAttendance.Status;
-
                     existingAttendance.FriendName = FriendName;
                     existingAttendance.Status = Status;
                     existingAttendance.Note = Note?.Trim();
@@ -102,9 +99,7 @@ namespace Football_Match.Controllers
                     TempData["SuccessMessage"] = "تم تعديل موقفك بنجاح! ✏️";
 
                     if (oldStatus != Status)
-                    {
                         _ = _push.SendToAllAsync("تحديث الموقف 🔄", $"{FriendName} غيّر موقفه إلى: {Status}", excludeAttendanceId: existingAttendance.Id);
-                    }
                 }
                 else
                 {
@@ -132,9 +127,7 @@ namespace Football_Match.Controllers
                 }
 
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
                     return Json(new { success = true, redirectUrl = Url.Action("Success") });
-                }
 
                 return RedirectToAction("Success");
             }
@@ -144,9 +137,7 @@ namespace Football_Match.Controllers
                 string fullErrorDetails = $"DB / Operation Exception Details:\n\nMessage: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}";
 
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
                     return StatusCode(500, new { success = false, message = fullErrorDetails });
-                }
 
                 return Content(fullErrorDetails, "text/plain; charset=utf-8");
             }
@@ -171,7 +162,23 @@ namespace Football_Match.Controllers
             return "/uploads/profiles/" + uniqueName;
         }
 
-        // تعديل بيانات الحساب (الاسم / رقم الموبايل / الصورة) من قايمة الإعدادات في الروم
+        // حفظ ملف عام (غلاف، صور بوستات، ستوري)
+        private async Task<string> SaveUploadedFile(IFormFile file, string subfolder)
+        {
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", subfolder);
+            Directory.CreateDirectory(uploadsFolder);
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var uniqueName = Guid.NewGuid().ToString() + ext;
+            var filePath = Path.Combine(uploadsFolder, uniqueName);
+
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
+
+            return $"/uploads/{subfolder}/" + uniqueName;
+        }
+
+        // تعديل بيانات الحساب (الاسم / رقم الموبايل / الصورة)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateAccount(string PhoneNumber, string FriendName, IFormFile? profilePhoto)
@@ -216,7 +223,76 @@ namespace Football_Match.Controllers
             return RedirectToAction("Room");
         }
 
-        // رفع ميديا الشات (محسنة لتدعم استجابات JSON دائمًا)
+        // تحديث البروفايل الشخصي (Bio, Nickname, Cover)
+        [HttpPost]
+        public async Task<IActionResult> UpdateProfile(string? bio, string? nickname, IFormFile? coverPhoto)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false, message = "غير مصرح" });
+
+            var attendance = await _context.Attendances.FindAsync(attendanceId.Value);
+            if (attendance == null)
+                return Json(new { success = false, message = "المستخدم مش موجود" });
+
+            try
+            {
+                attendance.Bio = bio?.Trim();
+                attendance.Nickname = nickname?.Trim();
+                attendance.UpdatedAt = DateTime.Now;
+
+                if (coverPhoto != null && coverPhoto.Length > 0)
+                {
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                    if (allowedTypes.Contains(coverPhoto.ContentType))
+                        attendance.CoverPhotoPath = await SaveUploadedFile(coverPhoto, "covers");
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, bio = attendance.Bio, nickname = attendance.Nickname, cover = attendance.CoverPhotoPath });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating profile.");
+                return Json(new { success = false, message = "حصلت مشكلة" });
+            }
+        }
+
+        // عرض البروفايل الشخصي
+        public async Task<IActionResult> Profile(int id)
+        {
+            var currentAttendanceId = GetOrRestoreAttendanceId();
+            if (currentAttendanceId == null)
+                return RedirectToAction("Index");
+
+            var profile = await _context.Attendances
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (profile == null)
+            {
+                TempData["ErrorMessage"] = "البروفايل مش موجود";
+                return RedirectToAction("Room");
+            }
+
+            var posts = await _context.Posts
+                .AsNoTracking()
+                .Include(p => p.Author)
+                .Include(p => p.Comments.Where(c => !c.IsDeleted)).ThenInclude(c => c.Commenter)
+                .Include(p => p.Reactions)
+                .Where(p => p.AttendanceId == id && !p.IsDeleted)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(20)
+                .ToListAsync();
+
+            ViewBag.CurrentAttendanceId = currentAttendanceId;
+            ViewBag.IsAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+            ViewBag.Posts = posts;
+            ViewBag.IsOwnProfile = currentAttendanceId == id;
+            return View(profile);
+        }
+
+        // رفع ميديا الشات
         [HttpPost]
         public async Task<IActionResult> UploadMedia(IFormFile file)
         {
@@ -255,12 +331,11 @@ namespace Football_Match.Controllers
             return View();
         }
 
-        // 4. غرفة الحضور والشات (محدثة مع حماية الجلسة)
+        // 4. غرفة الحضور والشات
         public async Task<IActionResult> Room()
         {
             var currentAttendanceId = GetOrRestoreAttendanceId();
 
-            // التحقق من وجود Session قبل الدخول لمنع الفشل الصامت عند إرسال الرسائل
             if (currentAttendanceId == null)
             {
                 TempData["ErrorMessage"] = "يرجى تسجيل موقفك ورقم الموبايل أولاً لدخول الشات!";
@@ -287,11 +362,48 @@ namespace Football_Match.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Could not fetch ChatMessages. Table might be empty or missing.");
+                    _logger.LogWarning(ex, "Could not fetch ChatMessages.");
+                }
+
+                // تحميل الستوريات النشطة (أقل من 24 ساعة)
+                var stories = new List<Story>();
+                try
+                {
+                    stories = await _context.Stories
+                        .AsNoTracking()
+                        .Include(s => s.Author)
+                        .Where(s => !s.IsDeleted && s.ExpiresAt > DateTime.Now)
+                        .OrderByDescending(s => s.CreatedAt)
+                        .ToListAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not fetch Stories.");
+                }
+
+                // تحميل أول 10 بوستات
+                var posts = new List<Post>();
+                try
+                {
+                    posts = await _context.Posts
+                        .AsNoTracking()
+                        .Include(p => p.Author)
+                        .Include(p => p.Comments.Where(c => !c.IsDeleted)).ThenInclude(c => c.Commenter)
+                        .Include(p => p.Reactions)
+                        .Where(p => !p.IsDeleted)
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Take(10)
+                        .ToListAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not fetch Posts.");
                 }
 
                 ViewBag.CurrentAttendanceId = currentAttendanceId;
                 ViewBag.Messages = messages ?? new List<ChatMessage>();
+                ViewBag.Stories = stories ?? new List<Story>();
+                ViewBag.Posts = posts ?? new List<Post>();
                 ViewBag.IsAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
 
                 return View(attendances);
@@ -301,6 +413,381 @@ namespace Football_Match.Controllers
                 _logger.LogError(ex, "Error loading Room page.");
                 return Content($"Room Page Error:\n\nMessage: {ex.Message}\n\nDetails:\n{ex}", "text/plain; charset=utf-8");
             }
+        }
+
+        // API: بوستات إضافية (Infinite Scroll)
+        [HttpGet]
+        public async Task<IActionResult> GetRoomPosts(int skip = 0, int take = 10)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false });
+
+            var posts = await _context.Posts
+                .AsNoTracking()
+                .Include(p => p.Author)
+                .Include(p => p.Comments.Where(c => !c.IsDeleted))
+                .Include(p => p.Reactions)
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip(skip)
+                .Take(take)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Content,
+                    p.MediaPath,
+                    p.MediaType,
+                    p.IsAdminPost,
+                    createdAt = p.CreatedAt.ToString("dd/MM HH:mm"),
+                    author = new
+                    {
+                        p.Author!.Id,
+                        name = p.Author.FriendName,
+                        nickname = p.Author.Nickname,
+                        photo = p.Author.ProfilePicturePath,
+                        isMvp = p.Author.IsMVP,
+                        rating = p.Author.PlayerRating,
+                        tag = p.Author.PlayerTag
+                    },
+                    reactions = p.Reactions.GroupBy(r => r.ReactionType)
+                        .Select(g => new { type = g.Key, count = g.Count() }),
+                    commentsCount = p.Comments.Count(c => !c.IsDeleted)
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, posts });
+        }
+
+        // API: إنشاء بوست جديد
+        [HttpPost]
+        public async Task<IActionResult> CreatePost(string? content, IFormFile? media, bool isAdminPost = false)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false, message = "يرجى تسجيل موقفك أولاً!" });
+
+            bool isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+            if (isAdminPost && !isAdmin) isAdminPost = false;
+
+            var hasContent = !string.IsNullOrWhiteSpace(content);
+            string? mediaPath = null;
+            string? mediaType = null;
+
+            try
+            {
+                if (media != null && media.Length > 0)
+                {
+                    var allowedImageTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                    var allowedVideoTypes = new[] { "video/mp4", "video/webm", "video/ogg" };
+                    var allAllowed = allowedImageTypes.Concat(allowedVideoTypes).ToArray();
+
+                    if (!allAllowed.Contains(media.ContentType))
+                        return Json(new { success = false, message = "نوع الملف غير مسموح به" });
+
+                    mediaType = allowedImageTypes.Contains(media.ContentType) ? "image" : "video";
+                    mediaPath = await SaveUploadedFile(media, "posts");
+                }
+
+                if (!hasContent && mediaPath == null)
+                    return Json(new { success = false, message = "اكتب حاجة أو ارفع صورة/فيديو الأول" });
+
+                var post = new Post
+                {
+                    AttendanceId = attendanceId.Value,
+                    Content = hasContent ? content!.Trim() : null,
+                    MediaPath = mediaPath,
+                    MediaType = mediaType,
+                    CreatedAt = DateTime.Now,
+                    IsDeleted = false,
+                    IsAdminPost = isAdminPost
+                };
+
+                _context.Posts.Add(post);
+                await _context.SaveChangesAsync();
+
+                var author = await _context.Attendances.FindAsync(attendanceId.Value);
+
+                return Json(new
+                {
+                    success = true,
+                    post = new
+                    {
+                        post.Id,
+                        post.Content,
+                        post.MediaPath,
+                        post.MediaType,
+                        post.IsAdminPost,
+                        createdAt = post.CreatedAt.ToString("dd/MM HH:mm"),
+                        author = new
+                        {
+                            id = author?.Id,
+                            name = author?.FriendName,
+                            nickname = author?.Nickname,
+                            photo = author?.ProfilePicturePath,
+                            isMvp = author?.IsMVP ?? false,
+                            rating = author?.PlayerRating,
+                            tag = author?.PlayerTag
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating post.");
+                return Json(new { success = false, message = "حصل خطأ أثناء نشر البوست" });
+            }
+        }
+
+        // API: حذف بوست
+        [HttpPost]
+        public async Task<IActionResult> DeletePost(int id)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            bool isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+
+            if (attendanceId == null && !isAdmin)
+                return Json(new { success = false });
+
+            var post = await _context.Posts.FindAsync(id);
+            if (post != null)
+            {
+                var isOwner = attendanceId != null && post.AttendanceId == attendanceId.Value;
+                if (isOwner || isAdmin)
+                {
+                    post.IsDeleted = true;
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true });
+                }
+            }
+
+            return Json(new { success = false });
+        }
+
+        // API: إضافة كومنت على بوست
+        [HttpPost]
+        public async Task<IActionResult> AddComment(int postId, string content)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false });
+
+            if (!string.IsNullOrWhiteSpace(content))
+            {
+                var postExists = await _context.Posts.AnyAsync(p => p.Id == postId && !p.IsDeleted);
+                if (postExists)
+                {
+                    var comment = new PostComment
+                    {
+                        PostId = postId,
+                        AttendanceId = attendanceId.Value,
+                        Content = content.Trim(),
+                        CreatedAt = DateTime.Now,
+                        IsDeleted = false
+                    };
+                    _context.PostComments.Add(comment);
+                    await _context.SaveChangesAsync();
+
+                    var author = await _context.Attendances.FindAsync(attendanceId.Value);
+                    return Json(new
+                    {
+                        success = true,
+                        comment = new
+                        {
+                            comment.Id,
+                            comment.Content,
+                            createdAt = comment.CreatedAt.ToString("HH:mm"),
+                            commenter = new { id = author?.Id, name = author?.FriendName, photo = author?.ProfilePicturePath }
+                        }
+                    });
+                }
+            }
+
+            return Json(new { success = false });
+        }
+
+        // API: ريأكت على بوست
+        [HttpPost]
+        public async Task<IActionResult> ReactPost(int postId, string reactionType)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false });
+
+            var postExists = await _context.Posts.AnyAsync(p => p.Id == postId && !p.IsDeleted);
+            if (postExists)
+            {
+                var existing = await _context.PostReactions
+                    .FirstOrDefaultAsync(r => r.PostId == postId && r.AttendanceId == attendanceId.Value);
+
+                if (existing != null)
+                {
+                    if (existing.ReactionType == reactionType)
+                        _context.PostReactions.Remove(existing);
+                    else
+                        existing.ReactionType = reactionType;
+                }
+                else
+                {
+                    _context.PostReactions.Add(new PostReaction
+                    {
+                        PostId = postId,
+                        AttendanceId = attendanceId.Value,
+                        ReactionType = reactionType
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                var counts = await _context.PostReactions
+                    .Where(r => r.PostId == postId)
+                    .GroupBy(r => r.ReactionType)
+                    .Select(g => new { type = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                return Json(new { success = true, reactions = counts });
+            }
+
+            return Json(new { success = false });
+        }
+
+        // ===== STORIES =====
+
+        // API: إنشاء ستوري
+        [HttpPost]
+        public async Task<IActionResult> CreateStory(string? content, IFormFile? media)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false, message = "يرجى تسجيل موقفك أولاً!" });
+
+            var hasContent = !string.IsNullOrWhiteSpace(content);
+            string? mediaPath = null;
+            string? mediaType = null;
+
+            try
+            {
+                if (media != null && media.Length > 0)
+                {
+                    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp", "video/mp4", "video/webm" };
+                    if (!allowedTypes.Contains(media.ContentType))
+                        return Json(new { success = false, message = "نوع الملف غير مسموح به" });
+
+                    mediaType = media.ContentType.StartsWith("image/") ? "image" : "video";
+                    mediaPath = await SaveUploadedFile(media, "stories");
+                }
+
+                if (!hasContent && mediaPath == null)
+                    return Json(new { success = false, message = "اكتب حاجة أو ارفع صورة" });
+
+                var story = new Story
+                {
+                    AttendanceId = attendanceId.Value,
+                    Content = hasContent ? content!.Trim() : null,
+                    MediaPath = mediaPath,
+                    MediaType = mediaType,
+                    CreatedAt = DateTime.Now,
+                    ExpiresAt = DateTime.Now.AddHours(24),
+                    IsDeleted = false
+                };
+
+                _context.Stories.Add(story);
+                await _context.SaveChangesAsync();
+
+                var author = await _context.Attendances.FindAsync(attendanceId.Value);
+
+                return Json(new
+                {
+                    success = true,
+                    story = new
+                    {
+                        story.Id,
+                        story.Content,
+                        story.MediaPath,
+                        story.MediaType,
+                        createdAt = story.CreatedAt.ToString("HH:mm"),
+                        author = new
+                        {
+                            id = author?.Id,
+                            name = author?.FriendName,
+                            photo = author?.ProfilePicturePath,
+                            isMvp = author?.IsMVP ?? false
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating story.");
+                return Json(new { success = false, message = "حصل خطأ" });
+            }
+        }
+
+        // API: الرد على ستوري — يبعت رسالة في الشات
+        [HttpPost]
+        public async Task<IActionResult> ReplyToStory(int storyId, string replyText)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId == null)
+                return Json(new { success = false, message = "يرجى تسجيل موقفك أولاً!" });
+
+            if (string.IsNullOrWhiteSpace(replyText))
+                return Json(new { success = false, message = "اكتب رد أولاً" });
+
+            var story = await _context.Stories
+                .Include(s => s.Author)
+                .FirstOrDefaultAsync(s => s.Id == storyId && !s.IsDeleted);
+
+            if (story == null)
+                return Json(new { success = false, message = "الستوري مش موجود" });
+
+            var replier = await _context.Attendances.FindAsync(attendanceId.Value);
+            if (replier == null)
+                return Json(new { success = false });
+
+            // بناء محتوى الرسالة
+            var storyPreview = story.Content?.Length > 50
+                ? story.Content.Substring(0, 50) + "..."
+                : story.Content;
+
+            var messageContent = story.MediaPath != null
+                ? $"↩️ رد على ستوري {story.Author?.FriendName}: {replyText}\n[📸 محتوى مرئي]"
+                : $"↩️ رد على ستوري {story.Author?.FriendName}: \"{storyPreview}\"\n{replyText}";
+
+            var message = new ChatMessage
+            {
+                AttendanceId = attendanceId.Value,
+                Content = messageContent,
+                SentAt = DateTime.Now,
+                IsDeleted = false
+            };
+
+            _context.ChatMessages.Add(message);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "تم إرسال الرد في الشات" });
+        }
+
+        // API: حذف ستوري
+        [HttpPost]
+        public async Task<IActionResult> DeleteStory(int id)
+        {
+            var attendanceId = GetOrRestoreAttendanceId();
+            bool isAdmin = HttpContext.Session.GetString("IsAdmin") == "true";
+
+            var story = await _context.Stories.FindAsync(id);
+            if (story != null)
+            {
+                var isOwner = attendanceId != null && story.AttendanceId == attendanceId.Value;
+                if (isOwner || isAdmin)
+                {
+                    story.IsDeleted = true;
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true });
+                }
+            }
+
+            return Json(new { success = false });
         }
 
         // 5. Login Admin GET
@@ -357,7 +844,7 @@ namespace Football_Match.Controllers
             return RedirectToAction("Admin");
         }
 
-        // 8.5 تعيين نجم المباراة (Admin) - شخص واحد بس في نفس الوقت
+        // 8.5 تعيين نجم المباراة (Admin)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetMVP(int id)
@@ -370,7 +857,6 @@ namespace Football_Match.Controllers
             {
                 var makingMvp = !target.IsMVP;
 
-                // إلغاء اللقب من أي حد تاني كان حامله قبل كده
                 var currentMvps = await _context.Attendances.Where(a => a.IsMVP).ToListAsync();
                 foreach (var a in currentMvps)
                     a.IsMVP = false;
@@ -379,9 +865,7 @@ namespace Football_Match.Controllers
                 await _context.SaveChangesAsync();
 
                 if (makingMvp)
-                {
                     _ = _push.SendToAllAsync("نجم المباراة 👑", $"{target.FriendName} أفضل لاعب في الماتش!", excludeAttendanceId: target.Id);
-                }
             }
 
             return RedirectToAction("Admin");
@@ -413,6 +897,36 @@ namespace Football_Match.Controllers
             return RedirectToAction("Admin");
         }
 
+        // Admin: تعيين تقييم لاعب
+        [HttpPost]
+        public async Task<IActionResult> AdminSetRating(int attendanceId, int rating)
+        {
+            if (HttpContext.Session.GetString("IsAdmin") != "true")
+                return Json(new { success = false });
+
+            var player = await _context.Attendances.FindAsync(attendanceId);
+            if (player == null) return Json(new { success = false });
+
+            player.PlayerRating = Math.Clamp(rating, 0, 10);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, rating = player.PlayerRating });
+        }
+
+        // Admin: تعيين تاج/لقب للاعب
+        [HttpPost]
+        public async Task<IActionResult> AdminSetTag(int attendanceId, string tag)
+        {
+            if (HttpContext.Session.GetString("IsAdmin") != "true")
+                return Json(new { success = false });
+
+            var player = await _context.Attendances.FindAsync(attendanceId);
+            if (player == null) return Json(new { success = false });
+
+            player.PlayerTag = tag?.Trim();
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
         // 9. تسجيل خروج
         public IActionResult Logout()
         {
@@ -421,7 +935,7 @@ namespace Football_Match.Controllers
             return RedirectToAction("Index");
         }
 
-        // 11. تغيير الموقف بضغطة واحدة من الروم من غير الرجوع لصفحة التسجيل
+        // 11. تغيير الموقف بضغطة واحدة
         [HttpPost]
         public async Task<IActionResult> QuickStatus(string status)
         {
@@ -443,9 +957,7 @@ namespace Football_Match.Controllers
             await _context.SaveChangesAsync();
 
             if (oldStatus != status)
-            {
                 _ = _push.SendToAllAsync("تحديث الموقف 🔄", $"{attendance.FriendName} غيّر موقفه إلى: {status}", excludeAttendanceId: attendance.Id);
-            }
 
             return Json(new { success = true, status = attendance.Status });
         }

@@ -16,6 +16,10 @@ namespace Football_Match
         public DbSet<PostComment> PostComments { get; set; }
         public DbSet<PostReaction> PostReactions { get; set; }
         public DbSet<PushSubscriber> PushSubscribers { get; set; }
+        public DbSet<Story> Stories { get; set; }
+
+        // متغير عالمي لرقم الفريق الفايز (null = لا يوجد فائز بعد)
+        // تُخزَّن في جدول Settings بسيط أو استخدام static (للتبسيط)
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +41,18 @@ namespace Football_Match
                 .HasOne(m => m.Sender)
                 .WithMany(a => a.ChatMessages)
                 .HasForeignKey(m => m.AttendanceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Story>()
+                .HasOne(s => s.Author)
+                .WithMany(a => a.Stories)
+                .HasForeignKey(s => s.AttendanceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.Author)
+                .WithMany(a => a.Posts)
+                .HasForeignKey(p => p.AttendanceId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

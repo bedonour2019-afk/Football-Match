@@ -22,6 +22,31 @@ namespace Football_Match.Models
         // مسار الصورة الشخصية (اختياري)
         public string? ProfilePicturePath { get; set; }
 
+        // غلاف البروفايل
+        public string? CoverPhotoPath { get; set; }
+
+        // البايو (نبذة شخصية)
+        [MaxLength(300)]
+        public string? Bio { get; set; }
+
+        // الاسم المستعار
+        [MaxLength(50)]
+        public string? Nickname { get; set; }
+
+        // تقييم الأدمن (0-10)
+        public int? PlayerRating { get; set; }
+
+        // مركز اللاعب (مهاجم، مدافع، وسط، حارس)
+        [MaxLength(50)]
+        public string? PlayerPosition { get; set; }
+
+        // رقم الفريق (1 أو 2)
+        public int? TeamNumber { get; set; }
+
+        // لقب خاص من الأدمن
+        [MaxLength(100)]
+        public string? PlayerTag { get; set; }
+
         public DateTime RespondedAt { get; set; } = DateTime.Now;
 
         // لتخزين تاريخ التعديل إذا قام بالتعديل
@@ -33,5 +58,7 @@ namespace Football_Match.Models
         // Navigation Properties
         public ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
         public ICollection<MessageReaction> MessageReactions { get; set; } = new List<MessageReaction>();
+        public ICollection<Story> Stories { get; set; } = new List<Story>();
+        public ICollection<Post> Posts { get; set; } = new List<Post>();
     }
 }
