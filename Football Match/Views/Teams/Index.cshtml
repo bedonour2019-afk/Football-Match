@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Football_Match.Models.Attendance>
+@model IEnumerable<Football_Match.Models.Attendance>
 @{
     Layout = null;
     int currentId = ViewBag.CurrentAttendanceId ?? 0;
@@ -14,7 +14,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>âڑ½ طµظپط­ط© ط§ظ„ظپط±ظ‚</title>
+    <title>⚽ تشكيلة الفرق والمباراة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -25,7 +25,7 @@
             color: #fff;
             font-family: "Segoe UI", Tahoma, sans-serif;
             min-height: 100vh;
-            padding-bottom: 40px;
+            padding-bottom: 50px;
         }
 
         .page-header {
@@ -37,8 +37,8 @@
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 10;
-            backdrop-filter: blur(10px);
+            z-index: 20;
+            backdrop-filter: blur(12px);
         }
 
         .page-title {
@@ -46,7 +46,7 @@
             font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .back-btn {
@@ -54,8 +54,8 @@
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 10px;
             color: rgba(255,255,255,0.85);
-            padding: 7px 14px;
-            font-size: 0.82rem;
+            padding: 7px 15px;
+            font-size: 0.84rem;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -63,19 +63,45 @@
             transition: all 0.2s;
         }
 
-        .back-btn:hover { color: #fff; background: rgba(255,255,255,0.14); }
+        .back-btn:hover { color: #fff; background: rgba(255,255,255,0.14); transform: scale(1.02); }
 
-        .container { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
+        .container-custom {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        /* Banner Winner */
+        .winner-banner {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(234,179,8,0.08));
+            border: 1px solid rgba(245,158,11,0.5);
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 30px rgba(245,158,11,0.15);
+        }
+
+        .winner-banner-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #f59e0b;
+        }
 
         /* Teams Grid */
         .teams-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
         }
 
-        @@media (max-width: 640px) {
+        @@media (max-width: 768px) {
             .teams-grid { grid-template-columns: 1fr; }
         }
 
@@ -85,86 +111,124 @@
             border-radius: 20px;
             padding: 20px;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
+        .team-card.team-1-card {
+            border-top: 4px solid #3b82f6;
+        }
+
+        .team-card.team-2-card {
+            border-top: 4px solid #ef4444;
+        }
+
+        /* Golden Winner styling */
         .team-card.winner {
-            background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,179,8,0.08));
-            border-color: rgba(245,158,11,0.5);
-            box-shadow: 0 0 30px rgba(245,158,11,0.15);
+            background: linear-gradient(145deg, rgba(245,158,11,0.16), rgba(20,20,35,0.95)) !important;
+            border: 2px solid #f59e0b !important;
+            border-top: 5px solid #f59e0b !important;
+            box-shadow: 0 0 35px rgba(245,158,11,0.25), inset 0 0 20px rgba(245,158,11,0.05);
         }
 
         .team-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
         .team-name {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 800;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .team-1-color { color: #3b82f6; }
-        .team-2-color { color: #ef4444; }
+        .team-1-color { color: #60a5fa; }
+        .team-2-color { color: #f87171; }
+        .winner-color { color: #f59e0b !important; }
 
-        .winner-badge {
+        .winner-pill {
             background: linear-gradient(135deg, #f59e0b, #eab308);
             color: #000;
             border-radius: 20px;
-            padding: 3px 10px;
+            padding: 3px 12px;
             font-size: 0.72rem;
             font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(245,158,11,0.4);
         }
 
+        /* Player Item */
         .player-card {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
+            gap: 12px;
+            padding: 10px 12px;
             border-radius: 12px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
-            margin-bottom: 8px;
-            transition: all 0.2s;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .player-card:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateX(-3px);
+            border-color: rgba(255,255,255,0.15);
         }
 
         .player-card.mvp-player {
-            background: linear-gradient(90deg, rgba(245,158,11,0.15), rgba(255,255,255,0.04));
-            border-color: rgba(245,158,11,0.3);
+            background: linear-gradient(90deg, rgba(245,158,11,0.18), rgba(255,255,255,0.04));
+            border-color: rgba(245,158,11,0.4);
+            box-shadow: 0 0 15px rgba(245,158,11,0.1);
         }
 
         .player-avatar {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .player-avatar.mvp-av {
+            border-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245,158,11,0.5);
         }
 
         .player-avatar-ph {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             flex-shrink: 0;
         }
 
         .player-info { flex: 1; min-width: 0; }
 
+        .player-name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .player-name {
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             font-weight: 700;
+            color: #fff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -172,19 +236,20 @@
 
         .player-sub {
             font-size: 0.72rem;
-            color: rgba(255,255,255,0.45);
+            color: rgba(255,255,255,0.5);
             display: flex;
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
+            margin-top: 3px;
         }
 
         .position-badge {
-            background: rgba(124,58,237,0.2);
-            color: #a855f7;
-            border: 1px solid rgba(124,58,237,0.3);
+            background: rgba(124,58,237,0.25);
+            color: #c084fc;
+            border: 1px solid rgba(124,58,237,0.35);
             border-radius: 6px;
-            padding: 1px 6px;
+            padding: 1px 7px;
             font-size: 0.68rem;
             font-weight: 700;
         }
@@ -192,102 +257,168 @@
         .tag-badge {
             background: rgba(245,158,11,0.15);
             color: #f59e0b;
-            border: 1px solid rgba(245,158,11,0.3);
+            border: 1px solid rgba(245,158,11,0.35);
             border-radius: 6px;
-            padding: 1px 6px;
+            padding: 1px 7px;
             font-size: 0.68rem;
             font-weight: 700;
         }
 
-        /* Rating Stars */
-        .rating-display {
-            display: flex;
-            align-items: center;
-            gap: 2px;
+        .rating-badge {
+            background: rgba(245,158,11,0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 0.72rem;
+            font-weight: 800;
         }
 
-        .rating-num {
-            font-size: 0.78rem;
-            font-weight: 800;
-            color: #f59e0b;
-            min-width: 20px;
+        .remove-btn {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 6px;
+            color: #ef4444;
+            padding: 4px 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .remove-btn:hover {
+            background: #ef4444;
+            color: #fff;
         }
 
         /* Admin Controls */
         .admin-panel {
-            background: rgba(124,58,237,0.08);
-            border: 1px solid rgba(124,58,237,0.2);
-            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(30,27,75,0.5));
+            border: 1px solid rgba(124,58,237,0.3);
+            border-radius: 18px;
             padding: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 26px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .admin-panel-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #a855f7;
-            margin-bottom: 14px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #c084fc;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+        }
+
+        .admin-card-section {
+            background: rgba(0,0,0,0.25);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+
+        .admin-section-label {
+            font-size: 0.76rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .admin-form-row {
             display: flex;
             gap: 8px;
-            align-items: flex-end;
+            align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 10px;
         }
 
         .admin-select, .admin-input {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 9px;
             color: #fff;
-            padding: 7px 10px;
-            font-size: 0.82rem;
-            min-width: 100px;
+            padding: 8px 12px;
+            font-size: 0.84rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .admin-select:focus, .admin-input:focus {
+            border-color: #a855f7;
+        }
+
+        .admin-select option {
+            background: #1e1b4b;
+            color: #fff;
         }
 
         .admin-btn {
             background: linear-gradient(135deg, #7c3aed, #a855f7);
             border: none;
-            border-radius: 8px;
+            border-radius: 9px;
             color: #fff;
-            padding: 7px 14px;
-            font-size: 0.82rem;
+            padding: 8px 16px;
+            font-size: 0.84rem;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .admin-btn:hover { transform: scale(1.03); }
+        .admin-btn:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(124,58,237,0.4); }
 
         .admin-btn.danger {
-            background: linear-gradient(135deg, #ef4444, #f87171);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
         }
+
+        .admin-btn.danger:hover { box-shadow: 0 4px 12px rgba(239,68,68,0.4); }
 
         .admin-btn.gold {
             background: linear-gradient(135deg, #f59e0b, #eab308);
             color: #000;
         }
 
+        .admin-btn.gold:hover { box-shadow: 0 4px 12px rgba(245,158,11,0.4); }
+
         /* Unassigned Players */
         .unassigned-section {
             background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+            padding: 18px;
         }
 
         .unassigned-title {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.45);
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: rgba(255,255,255,0.5);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
+            letter-spacing: 0.8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .unassigned-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .unassigned-pill:hover {
+            background: rgba(255,255,255,0.1);
+            color: #a855f7;
+            transform: scale(1.03);
         }
 
         /* Toast */
@@ -296,137 +427,181 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(124,58,237,0.9);
+            background: rgba(124,58,237,0.95);
             color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 600;
+            padding: 9px 20px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 700;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
             z-index: 9999;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         }
 
         .toast-msg.show { opacity: 1; }
-
-        /* Profile click */
-        .player-card { cursor: pointer; }
-        .player-card:hover { background: rgba(255,255,255,0.07); }
     </style>
 </head>
 <body>
     <div class="toast-msg" id="toastMsg"></div>
 
     <div class="page-header">
-        <div class="page-title">âڑ½ طµظپط­ط© ط§ظ„ظپط±ظ‚</div>
-        <a href="/Home/Room" class="back-btn"><i class="fas fa-arrow-right"></i> ط§ظ„ط؛ط±ظپط©</a>
+        <div class="page-title">
+            <span>⚽ تشكيلة الفرق</span>
+            @if (winnerTeam != null)
+            {
+                <span class="winner-pill">🏆 فاز الفريق @(winnerTeam == 1 ? "الأول" : "الثاني")</span>
+            }
+        </div>
+        <a href="/Home/Room" class="back-btn"><i class="fas fa-arrow-right"></i> العودة للغرفة</a>
     </div>
 
-    <div class="container">
+    <div class="container-custom">
+
+        @if (winnerTeam != null)
+        {
+            <div class="winner-banner">
+                <div class="winner-banner-text">
+                    <i class="fas fa-trophy fa-lg"></i>
+                    <span>مبروك للفريق @(winnerTeam == 1 ? "الأول 🔵" : "الثاني 🔴") الفوز بالماتش! 🏆</span>
+                </div>
+                @if (isAdminUser)
+                {
+                    <button class="admin-btn danger" style="padding:5px 12px;font-size:0.75rem;" onclick="setWinner(0)">إلغاء الفائز</button>
+                }
+            </div>
+        }
 
         @if (isAdminUser)
         {
-            <!-- ظ„ظˆط­ط© ط§ظ„ط£ط¯ظ…ظ† -->
+            <!-- لوحة تحكم الأدمن -->
             <div class="admin-panel">
-                <div class="admin-panel-title"><i class="fas fa-crown"></i> ط£ط¯ظˆط§طھ ط§ظ„ط£ط¯ظ…ظ†</div>
+                <div class="admin-panel-title">
+                    <i class="fas fa-crown"></i>
+                    <span>لوحة تحكم الأدمن في الفرق والتقييمات</span>
+                </div>
 
-                @if (unassigned.Any())
-                {
-                    <p style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-bottom:10px;">ط§ط®طھط§ط± ظ„ط§ط¹ط¨ ظˆط­ط·ظ‡ ظپظٹ ظپط±ظٹظ‚:</p>
+                <!-- إضافة لاعب لفريق -->
+                <div class="admin-card-section">
+                    <div class="admin-section-label">⚽ تعيين لاعب في فريق ومركز:</div>
                     <div class="admin-form-row">
-                        <select class="admin-select" id="playerSelect">
-                            <option value="">-- ط§ط®طھط§ط± ظ„ط§ط¹ط¨ --</option>
+                        <select class="admin-select" id="playerSelect" style="flex:1;min-width:140px;">
+                            <option value="">-- اختار اللاعب --</option>
                             @foreach (var p in unassigned)
                             {
-                                <option value="@p.Id">@p.FriendName</option>
+                                <option value="@p.Id">@p.FriendName (بدون فريق)</option>
                             }
-                            @foreach (var p in team1.Concat(team2))
+                            @foreach (var p in team1)
                             {
-                                <option value="@p.Id">@p.FriendName (ظپط±ظٹظ‚ @p.TeamNumber)</option>
+                                <option value="@p.Id">@p.FriendName (فريق 1)</option>
+                            }
+                            @foreach (var p in team2)
+                            {
+                                <option value="@p.Id">@p.FriendName (فريق 2)</option>
                             }
                         </select>
-                        <select class="admin-select" id="teamSelect">
-                            <option value="1">âڑ½ ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط£ظˆظ„</option>
-                            <option value="2">ًں”´ ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط«ط§ظ†ظٹ</option>
+                        <select class="admin-select" id="teamSelect" style="width:130px;">
+                            <option value="1">🔵 الفريق الأول</option>
+                            <option value="2">🔴 الفريق الثاني</option>
                         </select>
-                        <select class="admin-select" id="positionSelect">
-                            <option value="ظ…ظ‡ط§ط¬ظ…">âڑ، ظ…ظ‡ط§ط¬ظ…</option>
-                            <option value="ظˆط³ط·">ًںژ¯ ظˆط³ط·</option>
-                            <option value="ظ…ط¯ط§ظپط¹">ًں›،ï¸ڈ ظ…ط¯ط§ظپط¹</option>
-                            <option value="ط­ط§ط±ط³">ًں¥… ط­ط§ط±ط³</option>
+                        <select class="admin-select" id="positionSelect" style="width:120px;">
+                            <option value="مهاجم">⚡ مهاجم</option>
+                            <option value="وسط">🎯 خط وسط</option>
+                            <option value="مدافع">🛡️ مدافع</option>
+                            <option value="حارس">🥅 حارس مرمى</option>
                         </select>
-                        <button class="admin-btn" onclick="assignPlayer()"><i class="fas fa-plus"></i> ط£ط¶ظپ</button>
+                        <button class="admin-btn" onclick="assignPlayer()"><i class="fas fa-plus"></i> حفظ</button>
                     </div>
-                }
-
-                <div class="admin-form-row">
-                    <select class="admin-select" id="ratingPlayerSelect">
-                        <option value="">-- ط§ط®طھط§ط± ظ„ط§ط¹ط¨ --</option>
-                        @foreach (var p in Model)
-                        {
-                            <option value="@p.Id">@p.FriendName</option>
-                        }
-                    </select>
-                    <input type="number" class="admin-input" id="ratingValue" placeholder="ط§ظ„طھظ‚ظٹظٹظ… (0-10)" min="0" max="10" style="width:150px;" />
-                    <button class="admin-btn" onclick="setRating()"><i class="fas fa-star"></i> ط­ظپط¸ ط§ظ„طھظ‚ظٹظٹظ…</button>
                 </div>
 
-                <div class="admin-form-row">
-                    <select class="admin-select" id="tagPlayerSelect">
-                        <option value="">-- ط§ط®طھط§ط± ظ„ط§ط¹ط¨ --</option>
-                        @foreach (var p in Model)
-                        {
-                            <option value="@p.Id">@p.FriendName</option>
-                        }
-                    </select>
-                    <input type="text" class="admin-input" id="tagValue" placeholder="ط§ظ„طھط§ط¬/ط§ظ„ظ„ظ‚ط¨" style="width:200px;" />
-                    <button class="admin-btn" onclick="setTag()"><i class="fas fa-tag"></i> ط­ظپط¸ ط§ظ„طھط§ط¬</button>
+                <!-- تقييم اللاعبين -->
+                <div class="admin-card-section">
+                    <div class="admin-section-label">⭐ تقييم اللاعب (من 10):</div>
+                    <div class="admin-form-row">
+                        <select class="admin-select" id="ratingPlayerSelect" style="flex:1;min-width:140px;">
+                            <option value="">-- اختار اللاعب للتقييم --</option>
+                            @foreach (var p in Model)
+                            {
+                                <option value="@p.Id">@p.FriendName (@(p.PlayerRating.HasValue ? p.PlayerRating + "⭐" : "بدون تقييم"))</option>
+                            }
+                        </select>
+                        <input type="number" class="admin-input" id="ratingValue" placeholder="التقييم (0 - 10)" min="0" max="10" style="width:140px;" />
+                        <button class="admin-btn" onclick="setRating()"><i class="fas fa-star"></i> حفظ التقييم</button>
+                    </div>
                 </div>
 
-                <div class="admin-form-row" style="margin-top:6px;">
-                    <button class="admin-btn gold" onclick="setWinner(1)">ًںڈ† ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط£ظˆظ„ ظپط§ط²</button>
-                    <button class="admin-btn gold" onclick="setWinner(2)">ًںڈ† ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط«ط§ظ†ظٹ ظپط§ط²</button>
-                    <button class="admin-btn danger" onclick="setWinner(0)">â‌Œ ط¥ظ„ط؛ط§ط، ط§ظ„ظپط§ط¦ط²</button>
+                <!-- تاج / لقب اللاعب -->
+                <div class="admin-card-section">
+                    <div class="admin-section-label">🏷️ تعيين لقب أو تاج للاعب:</div>
+                    <div class="admin-form-row">
+                        <select class="admin-select" id="tagPlayerSelect" style="flex:1;min-width:140px;">
+                            <option value="">-- اختار اللاعب --</option>
+                            @foreach (var p in Model)
+                            {
+                                <option value="@p.Id">@p.FriendName @(!string.IsNullOrEmpty(p.PlayerTag) ? "🏷️ " + p.PlayerTag : "")</option>
+                            }
+                        </select>
+                        <input type="text" class="admin-input" id="tagValue" placeholder="اكتب التاج (مثل: الهداف، السد العالي...)" style="flex:1;min-width:160px;" />
+                        <button class="admin-btn" onclick="setTag()"><i class="fas fa-tag"></i> حفظ التاج</button>
+                    </div>
+                </div>
+
+                <!-- اختيار الفريق الفائز -->
+                <div class="admin-card-section" style="margin-bottom:0;">
+                    <div class="admin-section-label">🏆 تحديد الفريق الفائز:</div>
+                    <div class="admin-form-row">
+                        <button class="admin-btn gold" onclick="setWinner(1)"><i class="fas fa-trophy"></i> فوز الفريق الأول 🔵</button>
+                        <button class="admin-btn gold" onclick="setWinner(2)"><i class="fas fa-trophy"></i> فوز الفريق الثاني 🔴</button>
+                        <button class="admin-btn danger" onclick="setWinner(0)"><i class="fas fa-times"></i> إلغاء الفائز</button>
+                    </div>
                 </div>
             </div>
         }
 
-        <!-- ط§ظ„ظپط±ظ‚ -->
+        <!-- عرض الفريقين جنب بعض -->
         <div class="teams-grid">
-            <!-- ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط£ظˆظ„ -->
-            <div class="team-card @(winnerTeam == 1 ? "winner" : "")">
+            <!-- الفريق الأول -->
+            <div class="team-card team-1-card @(winnerTeam == 1 ? "winner" : "")">
                 <div class="team-header">
-                    <div class="team-name team-1-color">
-                        <i class="fas fa-shield-alt"></i> ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط£ظˆظ„
+                    <div class="team-name @(winnerTeam == 1 ? "winner-color" : "team-1-color")">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>الفريق الأول</span>
                     </div>
                     @if (winnerTeam == 1)
                     {
-                        <div class="winner-badge"><i class="fas fa-trophy"></i> ط§ظ„ظپط§ط¦ط² ًںڈ†</div>
+                        <div class="winner-pill"><i class="fas fa-crown"></i> الفائز بالمباراة 🏆</div>
                     }
-                    <span style="font-size:0.75rem;color:rgba(255,255,255,0.4);">@team1.Count ظ„ط§ط¹ط¨</span>
+                    <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);font-weight:600;">@team1.Count لاعب</span>
                 </div>
+
                 @if (!team1.Any())
                 {
-                    <div style="text-align:center;color:rgba(255,255,255,0.25);font-size:0.82rem;padding:20px;">ظ„ط§ ظٹظˆط¬ط¯ ظ„ط§ط¹ط¨ظˆظ† ط¨ط¹ط¯</div>
+                    <div style="text-align:center;color:rgba(255,255,255,0.3);font-size:0.85rem;padding:35px 0;">
+                        <i class="fas fa-users-slash fa-2x mb-2" style="display:block;opacity:0.4;"></i>
+                        لم يتم تعيين أي لاعب في الفريق الأول بعد
+                    </div>
                 }
+
                 @foreach (var p in team1)
                 {
                     <div class="player-card @(p.IsMVP ? "mvp-player" : "")" onclick="window.location.href='/Home/Profile/@p.Id'">
                         @if (!string.IsNullOrEmpty(p.ProfilePicturePath))
                         {
-                            <img class="player-avatar" src="@p.ProfilePicturePath" alt="@p.FriendName" style="@(p.IsMVP ? "box-shadow:0 0 0 2px #f59e0b;" : "")" />
+                            <img class="player-avatar @(p.IsMVP ? "mvp-av" : "")" src="@p.ProfilePicturePath" alt="@p.FriendName" />
                         }
                         else
                         {
-                            <div class="player-avatar-ph" style="background:rgba(59,130,246,0.2);color:#3b82f6;">
+                            <div class="player-avatar-ph @(p.IsMVP ? "mvp-av" : "")" style="background:rgba(59,130,246,0.2);color:#60a5fa;">
                                 @(p.FriendName.Length > 0 ? p.FriendName.Substring(0, 1).ToUpper() : "?")
                             </div>
                         }
                         <div class="player-info">
-                            <div class="player-name">
-                                @if (p.IsMVP) { <span>ًں‘‘ </span> }
-                                @(p.Nickname ?? p.FriendName)
+                            <div class="player-name-row">
+                                <span class="player-name">
+                                    @if (p.IsMVP) { <span style="color:#f59e0b;">👑</span> }
+                                    @(p.Nickname ?? p.FriendName)
+                                </span>
                             </div>
                             <div class="player-sub">
                                 @if (!string.IsNullOrEmpty(p.PlayerPosition))
@@ -435,58 +610,65 @@
                                 }
                                 @if (!string.IsNullOrEmpty(p.PlayerTag))
                                 {
-                                    <span class="tag-badge">ًںڈ·ï¸ڈ @p.PlayerTag</span>
+                                    <span class="tag-badge">🏷️ @p.PlayerTag</span>
                                 }
                                 @if (p.PlayerRating.HasValue)
                                 {
-                                    <span class="rating-display">
-                                        <span class="rating-num">@p.PlayerRating</span>
-                                        <span style="color:#f59e0b;font-size:0.72rem;">â­گ</span>
-                                    </span>
+                                    <span class="rating-badge">⭐ @p.PlayerRating/10</span>
                                 }
                             </div>
                         </div>
                         @if (isAdminUser)
                         {
-                            <button onclick="event.stopPropagation(); removeFromTeam(@p.Id)" style="background:rgba(239,68,68,0.15);border:none;border-radius:6px;color:#ef4444;padding:3px 7px;font-size:0.7rem;cursor:pointer;">ط¥ط²ط§ظ„ط©</button>
+                            <button class="remove-btn" onclick="event.stopPropagation(); removeFromTeam(@p.Id)" title="إزالة من الفريق">
+                                <i class="fas fa-times"></i>
+                            </button>
                         }
                     </div>
                 }
             </div>
 
-            <!-- ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط«ط§ظ†ظٹ -->
-            <div class="team-card @(winnerTeam == 2 ? "winner" : "")">
+            <!-- الفريق الثاني -->
+            <div class="team-card team-2-card @(winnerTeam == 2 ? "winner" : "")">
                 <div class="team-header">
-                    <div class="team-name team-2-color">
-                        <i class="fas fa-fire"></i> ط§ظ„ظپط±ظٹظ‚ ط§ظ„ط«ط§ظ†ظٹ
+                    <div class="team-name @(winnerTeam == 2 ? "winner-color" : "team-2-color")">
+                        <i class="fas fa-fire"></i>
+                        <span>الفريق الثاني</span>
                     </div>
                     @if (winnerTeam == 2)
                     {
-                        <div class="winner-badge"><i class="fas fa-trophy"></i> ط§ظ„ظپط§ط¦ط² ًںڈ†</div>
+                        <div class="winner-pill"><i class="fas fa-crown"></i> الفائز بالمباراة 🏆</div>
                     }
-                    <span style="font-size:0.75rem;color:rgba(255,255,255,0.4);">@team2.Count ظ„ط§ط¹ط¨</span>
+                    <span style="font-size:0.78rem;color:rgba(255,255,255,0.45);font-weight:600;">@team2.Count لاعب</span>
                 </div>
+
                 @if (!team2.Any())
                 {
-                    <div style="text-align:center;color:rgba(255,255,255,0.25);font-size:0.82rem;padding:20px;">ظ„ط§ ظٹظˆط¬ط¯ ظ„ط§ط¹ط¨ظˆظ† ط¨ط¹ط¯</div>
+                    <div style="text-align:center;color:rgba(255,255,255,0.3);font-size:0.85rem;padding:35px 0;">
+                        <i class="fas fa-users-slash fa-2x mb-2" style="display:block;opacity:0.4;"></i>
+                        لم يتم تعيين أي لاعب في الفريق الثاني بعد
+                    </div>
                 }
+
                 @foreach (var p in team2)
                 {
                     <div class="player-card @(p.IsMVP ? "mvp-player" : "")" onclick="window.location.href='/Home/Profile/@p.Id'">
                         @if (!string.IsNullOrEmpty(p.ProfilePicturePath))
                         {
-                            <img class="player-avatar" src="@p.ProfilePicturePath" alt="@p.FriendName" style="@(p.IsMVP ? "box-shadow:0 0 0 2px #f59e0b;" : "")" />
+                            <img class="player-avatar @(p.IsMVP ? "mvp-av" : "")" src="@p.ProfilePicturePath" alt="@p.FriendName" />
                         }
                         else
                         {
-                            <div class="player-avatar-ph" style="background:rgba(239,68,68,0.2);color:#ef4444;">
+                            <div class="player-avatar-ph @(p.IsMVP ? "mvp-av" : "")" style="background:rgba(239,68,68,0.2);color:#f87171;">
                                 @(p.FriendName.Length > 0 ? p.FriendName.Substring(0, 1).ToUpper() : "?")
                             </div>
                         }
                         <div class="player-info">
-                            <div class="player-name">
-                                @if (p.IsMVP) { <span>ًں‘‘ </span> }
-                                @(p.Nickname ?? p.FriendName)
+                            <div class="player-name-row">
+                                <span class="player-name">
+                                    @if (p.IsMVP) { <span style="color:#f59e0b;">👑</span> }
+                                    @(p.Nickname ?? p.FriendName)
+                                </span>
                             </div>
                             <div class="player-sub">
                                 @if (!string.IsNullOrEmpty(p.PlayerPosition))
@@ -495,41 +677,53 @@
                                 }
                                 @if (!string.IsNullOrEmpty(p.PlayerTag))
                                 {
-                                    <span class="tag-badge">ًںڈ·ï¸ڈ @p.PlayerTag</span>
+                                    <span class="tag-badge">🏷️ @p.PlayerTag</span>
                                 }
                                 @if (p.PlayerRating.HasValue)
                                 {
-                                    <span class="rating-display">
-                                        <span class="rating-num">@p.PlayerRating</span>
-                                        <span style="color:#f59e0b;font-size:0.72rem;">â­گ</span>
-                                    </span>
+                                    <span class="rating-badge">⭐ @p.PlayerRating/10</span>
                                 }
                             </div>
                         </div>
                         @if (isAdminUser)
                         {
-                            <button onclick="event.stopPropagation(); removeFromTeam(@p.Id)" style="background:rgba(239,68,68,0.15);border:none;border-radius:6px;color:#ef4444;padding:3px 7px;font-size:0.7rem;cursor:pointer;">ط¥ط²ط§ظ„ط©</button>
+                            <button class="remove-btn" onclick="event.stopPropagation(); removeFromTeam(@p.Id)" title="إزالة من الفريق">
+                                <i class="fas fa-times"></i>
+                            </button>
                         }
                     </div>
                 }
             </div>
         </div>
 
-        <!-- ط§ظ„ظ„ط§ط¹ط¨ظˆظ† ط؛ظٹط± ط§ظ„ظ…ط¹ظٹظ‘ظ†ظˆظ† -->
+        <!-- اللاعبون غير المعينين في أي فريق -->
         @if (unassigned.Any())
         {
             <div class="unassigned-section">
-                <div class="unassigned-title">âڈ³ ظ„ط§ط¹ط¨ظˆظ† ط¨ط¯ظˆظ† ظپط±ظٹظ‚</div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <div class="unassigned-title">
+                    <i class="fas fa-user-clock"></i>
+                    <span>لاعبون جاهزون بدون فريق (@unassigned.Count)</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
                     @foreach (var p in unassigned)
                     {
-                        <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:5px 12px;cursor:pointer;" onclick="window.location.href='/Home/Profile/@p.Id'">
+                        <a href="/Home/Profile/@p.Id" class="unassigned-pill">
                             @if (!string.IsNullOrEmpty(p.ProfilePicturePath))
                             {
-                                <img src="@p.ProfilePicturePath" style="width:24px;height:24px;border-radius:50%;object-fit:cover;" />
+                                <img src="@p.ProfilePicturePath" style="width:26px;height:26px;border-radius:50%;object-fit:cover;" />
                             }
-                            <span style="font-size:0.8rem;">@p.FriendName</span>
-                        </div>
+                            else
+                            {
+                                <span style="width:26px;height:26px;border-radius:50%;background:rgba(124,58,237,0.3);color:#c084fc;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">
+                                    @(p.FriendName.Length > 0 ? p.FriendName.Substring(0,1).ToUpper() : "?")
+                                </span>
+                            }
+                            <span style="font-size:0.84rem;font-weight:600;">@p.FriendName</span>
+                            @if (p.PlayerRating.HasValue)
+                            {
+                                <span style="color:#f59e0b;font-size:0.75rem;font-weight:700;">⭐@p.PlayerRating</span>
+                            }
+                        </a>
                     }
                 </div>
             </div>
@@ -548,72 +742,98 @@
             const pid = document.getElementById('playerSelect').value;
             const team = document.getElementById('teamSelect').value;
             const pos = document.getElementById('positionSelect').value;
-            if (!pid) { showToast('ط§ط®طھط§ط± ظ„ط§ط¹ط¨ ط£ظˆظ„ط§ظ‹'); return; }
+            if (!pid) { showToast('يرجى اختيار لاعب أولاً'); return; }
 
-            const res = await fetch('/Teams/SetTeam', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attendanceId: parseInt(pid), teamNumber: parseInt(team), position: pos })
-            });
-            const d = await res.json();
-            if (d.success) { showToast('طھظ… ط¥ط¶ط§ظپط© ط§ظ„ظ„ط§ط¹ط¨ ظ„ظ„ظپط±ظٹظ‚ âœ…'); setTimeout(() => location.reload(), 800); }
-            else showToast(d.message || 'ط­طµظ„ ط®ط·ط£');
+            const fd = new FormData();
+            fd.append('attendanceId', pid);
+            fd.append('teamNumber', team);
+            fd.append('position', pos);
+
+            try {
+                const res = await fetch('/Teams/SetTeam', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('تم تعيين اللاعب في الفريق بنجاح ✅');
+                    setTimeout(() => location.reload(), 700);
+                } else {
+                    showToast(d.message || 'حصل خطأ');
+                }
+            } catch (e) { showToast('فشل الاتصال'); }
         }
 
         async function setRating() {
             const pid = document.getElementById('ratingPlayerSelect').value;
             const rating = parseInt(document.getElementById('ratingValue').value);
-            if (!pid || isNaN(rating)) { showToast('ط§ط®طھط§ط± ظ„ط§ط¹ط¨ ظˆط­ط· ط§ظ„طھظ‚ظٹظٹظ…'); return; }
+            if (!pid || isNaN(rating)) { showToast('يرجى اختيار اللاعب وإدخال التقييم'); return; }
 
-            const res = await fetch('/Teams/SetRating', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attendanceId: parseInt(pid), rating })
-            });
-            const d = await res.json();
-            if (d.success) { showToast(`طھظ… ط­ظپط¸ ط§ظ„طھظ‚ظٹظٹظ… ${d.rating} â­گ`); setTimeout(() => location.reload(), 800); }
-            else showToast(d.message || 'ط­طµظ„ ط®ط·ط£');
+            const fd = new FormData();
+            fd.append('attendanceId', pid);
+            fd.append('rating', rating);
+
+            try {
+                const res = await fetch('/Teams/SetRating', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(`تم حفظ تقييم اللاعب: ${d.rating} ⭐`);
+                    setTimeout(() => location.reload(), 700);
+                } else {
+                    showToast(d.message || 'حصل خطأ');
+                }
+            } catch (e) { showToast('فشل الاتصال'); }
         }
 
         async function setTag() {
             const pid = document.getElementById('tagPlayerSelect').value;
             const tag = document.getElementById('tagValue').value.trim();
-            if (!pid) { showToast('ط§ط®طھط§ط± ظ„ط§ط¹ط¨ ط£ظˆظ„ط§ظ‹'); return; }
+            if (!pid) { showToast('يرجى اختيار اللاعب أولاً'); return; }
 
-            const res = await fetch('/Teams/SetTag', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attendanceId: parseInt(pid), tag })
-            });
-            const d = await res.json();
-            if (d.success) { showToast('طھظ… ط­ظپط¸ ط§ظ„طھط§ط¬ âœ…'); setTimeout(() => location.reload(), 800); }
-            else showToast(d.message || 'ط­طµظ„ ط®ط·ط£');
+            const fd = new FormData();
+            fd.append('attendanceId', pid);
+            fd.append('tag', tag);
+
+            try {
+                const res = await fetch('/Teams/SetTag', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('تم حفظ التاج/اللقب بنجاح 🏷️');
+                    setTimeout(() => location.reload(), 700);
+                } else {
+                    showToast(d.message || 'حصل خطأ');
+                }
+            } catch (e) { showToast('فشل الاتصال'); }
         }
 
         async function setWinner(teamNum) {
-            const res = await fetch('/Teams/SetWinner', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ teamNumber: teamNum })
-            });
-            const d = await res.json();
-            if (d.success) {
-                showToast(teamNum > 0 ? `ط§ظ„ظپط±ظٹظ‚ ${teamNum} ظ‡ظˆ ط§ظ„ظپط§ط¦ط² ًںڈ†` : 'طھظ… ط¥ظ„ط؛ط§ط، ط§ظ„ظپط§ط¦ط²');
-                setTimeout(() => location.reload(), 800);
-            }
+            const fd = new FormData();
+            fd.append('teamNumber', teamNum);
+
+            try {
+                const res = await fetch('/Teams/SetWinner', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) {
+                    showToast(teamNum > 0 ? `الفريق ${teamNum == 1 ? "الأول" : "الثاني"} هو الفائز! 🏆` : 'تم إلغاء الفائز');
+                    setTimeout(() => location.reload(), 700);
+                } else {
+                    showToast('حصل خطأ');
+                }
+            } catch (e) { showToast('فشل الاتصال'); }
         }
 
         async function removeFromTeam(pid) {
-            if (!confirm('ظ‡ظ„ طھط±ظٹط¯ ط¥ط²ط§ظ„ط© ط§ظ„ظ„ط§ط¹ط¨ ظ…ظ† ط§ظ„ظپط±ظٹظ‚طں')) return;
-            const res = await fetch('/Teams/RemoveFromTeam', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attendanceId: pid })
-            });
-            const d = await res.json();
-            if (d.success) { showToast('طھظ… ط¥ط²ط§ظ„ط© ط§ظ„ظ„ط§ط¹ط¨'); setTimeout(() => location.reload(), 600); }
+            if (!confirm('هل تريد إزالة هذا اللاعب من فريقه الحالي؟')) return;
+
+            const fd = new FormData();
+            fd.append('attendanceId', pid);
+
+            try {
+                const res = await fetch('/Teams/RemoveFromTeam', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) {
+                    showToast('تمت إزالة اللاعب من الفريق');
+                    setTimeout(() => location.reload(), 600);
+                }
+            } catch (e) { showToast('فشل الاتصال'); }
         }
     </script>
 </body>
 </html>
-
