@@ -725,9 +725,7 @@
         </div>
         <div class="header-actions">
             <button class="back-btn" onclick="openSettingsModal()" title="الإعدادات"><i class="fas fa-cog"></i></button>
-            <button id="pushBtn" class="back-btn" onclick="enablePushNotifications()" title="فعّل الإشعارات"><i class="fas fa-bell"></i> <span class="d-none d-sm-inline">إشعارات</span></button>
             <a href="/Teams/Index" class="back-btn"><i class="fas fa-users"></i> <span class="d-none d-sm-inline">الفرق</span></a>
-            <button class="back-btn" onclick="openStatusModal()"><i class="fas fa-edit"></i> <span class="d-none d-sm-inline">موقفك</span></button>
             <button class="mobile-toggle-btn" onclick="toggleMobileSidebar()"><i class="fas fa-users me-1"></i> الحضور</button>
         </div>
     </div>
@@ -1151,12 +1149,14 @@
         <div class="modal-box">
             <h3>الإعدادات</h3>
             <p>تحكم في حسابك وخياراتك</p>
-            <a href="/Home/Login" class="modal-option-btn" style="display:block;text-decoration:none;"><i class="fas fa-user-shield me-1"></i> تسجيل دخول الأدمن</a>
             @if (currentId > 0)
             {
+                <button class="modal-option-btn going" onclick="closeSettingsModal(); openStatusModal();"><i class="fas fa-edit me-1"></i> تعديل موقفك من الماتش</button>
+                <button id="pushBtn" class="modal-option-btn" onclick="enablePushNotifications()"><i class="fas fa-bell me-1"></i> فعّل الإشعارات</button>
                 <button class="modal-option-btn" onclick="closeSettingsModal(); openAccountModal();"><i class="fas fa-user-edit me-1"></i> تعديل الحساب</button>
                 <button class="modal-option-btn" onclick="closeSettingsModal(); window.location.href='/Home/Profile/@currentId';"><i class="fas fa-user me-1"></i> بروفايلي</button>
             }
+            <a href="/Home/Login" class="modal-option-btn" style="display:block;text-decoration:none;"><i class="fas fa-user-shield me-1"></i> تسجيل دخول الأدمن</a>
             <a href="/Home/Logout" class="modal-option-btn not-going" style="display:block;text-decoration:none;" onclick="return confirm('هل تريد تسجيل الخروج؟');"><i class="fas fa-sign-out-alt me-1"></i> تسجيل الخروج</a>
             <button class="modal-cancel" onclick="closeSettingsModal()">إلغاء</button>
         </div>

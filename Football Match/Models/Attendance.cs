@@ -47,6 +47,10 @@ namespace Football_Match.Models
         [MaxLength(100)]
         public string? PlayerTag { get; set; }
 
+        // كلمة سر الحساب
+        [MaxLength(100)]
+        public string? Password { get; set; }
+
         public DateTime RespondedAt { get; set; } = DateTime.Now;
 
         // لتخزين تاريخ التعديل إذا قام بالتعديل

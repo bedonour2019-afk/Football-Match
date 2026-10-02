@@ -245,6 +245,13 @@
             <p>سجّل موقفك وانضم للغرفة مع الشباب</p>
         </div>
 
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+            </div>
+        }
+
         <div class="info-badge">
             <i class="fas fa-info-circle" style="color:#a855f7"></i>
             رقم التليفون هو حسابك، تقدر تعدّل موقفك في أي وقت.
@@ -266,6 +273,11 @@
             <div class="mb-3">
                 <label class="form-label-custom">📱 رقم الموبايل</label>
                 <input type="tel" name="PhoneNumber" class="form-control-custom" placeholder="01xxxxxxxxx" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label-custom">🔒 كلمة السر</label>
+                <input type="password" name="Password" class="form-control-custom" placeholder="اختار كلمة سر لحسابك..." required minlength="4" autocomplete="new-password" />
             </div>
 
             <div class="mb-3">

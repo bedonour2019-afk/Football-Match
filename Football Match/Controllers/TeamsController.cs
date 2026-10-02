@@ -9,13 +9,23 @@ namespace Football_Match.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<TeamsController> _logger;
 
-        // رقم الفريق الفايز (static للتبسيط — يُمكن حفظها في DB لاحقاً)
-        private static int? _winnerTeam = null;
-
         public TeamsController(AppDbContext context, ILogger<TeamsController> logger)
         {
             _context = context;
             _logger = logger;
+        }
+
+        // بيجيب الصف الوحيد بتاع إعدادات الماتش، ولو مش موجود بيعمله (أول مرة بس)
+        private async Task<MatchSetting> GetOrCreateSettingsAsync()
+        {
+            var settings = await _context.MatchSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new MatchSetting { WinnerTeamNumber = null };
+                _context.MatchSettings.Add(settings);
+                await _context.SaveChangesAsync();
+            }
+            return settings;
         }
 
         private int? CurrentAttendanceId
@@ -51,9 +61,11 @@ namespace Football_Match.Controllers
                 .ThenBy(a => a.FriendName)
                 .ToListAsync();
 
+            var settings = await GetOrCreateSettingsAsync();
+
             ViewBag.CurrentAttendanceId = CurrentAttendanceId;
             ViewBag.IsAdmin = IsAdmin;
-            ViewBag.WinnerTeam = _winnerTeam;
+            ViewBag.WinnerTeam = settings.WinnerTeamNumber;
             return View(attendances);
         }
 
@@ -95,15 +107,18 @@ namespace Football_Match.Controllers
             return Json(new { success = true, rating });
         }
 
-        // 4. تعيين الفريق الفايز (Admin)
+        // 4. تعيين الفريق الفايز (Admin) - بيتخزن في قاعدة البيانات دلوقتي، مش بيتمسح لو السيرفر عمل Restart
         [HttpPost]
-        public IActionResult SetWinner(int teamNumber)
+        public async Task<IActionResult> SetWinner(int teamNumber)
         {
             if (!IsAdmin)
                 return Json(new { success = false, message = "غير مسموح" });
 
-            _winnerTeam = teamNumber > 0 ? teamNumber : (int?)null;
-            return Json(new { success = true, winner = _winnerTeam });
+            var settings = await GetOrCreateSettingsAsync();
+            settings.WinnerTeamNumber = teamNumber > 0 ? teamNumber : (int?)null;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, winner = settings.WinnerTeamNumber });
         }
 
         // 5. تعيين لقب/تاج للاعب (Admin)
@@ -162,7 +177,8 @@ namespace Football_Match.Controllers
                 })
                 .ToListAsync();
 
-            return Json(new { players, winnerTeam = _winnerTeam });
+            var settings = await GetOrCreateSettingsAsync();
+            return Json(new { players, winnerTeam = settings.WinnerTeamNumber });
         }
     }
 }

@@ -60,11 +60,12 @@ namespace Football_Match.Controllers
         // 2. استقبال التسجيل
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(string PhoneNumber, string FriendName, string Status, string? Note, IFormFile? profilePhoto)
+        public async Task<IActionResult> Submit(string PhoneNumber, string FriendName, string Status, string? Note, string? Password, IFormFile? profilePhoto)
         {
             PhoneNumber = (PhoneNumber ?? "").Trim();
             FriendName = (FriendName ?? "").Trim();
             Status = (Status ?? "جاي أكيد").Trim();
+            Password = (Password ?? "").Trim();
 
             if (string.IsNullOrEmpty(PhoneNumber) || string.IsNullOrEmpty(FriendName))
             {
@@ -75,6 +76,15 @@ namespace Football_Match.Controllers
                 return RedirectToAction("Index");
             }
 
+            if (string.IsNullOrEmpty(Password))
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return BadRequest(new { success = false, message = "لازم تحط كلمة سر!" });
+
+                TempData["ErrorMessage"] = "لازم تحط كلمة سر!";
+                return RedirectToAction("Index");
+            }
+
             try
             {
                 var existingAttendance = await _context.Attendances
@@ -82,11 +92,25 @@ namespace Football_Match.Controllers
 
                 if (existingAttendance != null)
                 {
+                    // لو الحساب عنده كلمة سر محفوظة قبل كده، لازم تتطابق
+                    if (!string.IsNullOrEmpty(existingAttendance.Password) && existingAttendance.Password != Password)
+                    {
+                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                            return BadRequest(new { success = false, message = "كلمة السر غلط! جرب تاني." });
+
+                        TempData["ErrorMessage"] = "كلمة السر غلط! جرب تاني.";
+                        return RedirectToAction("Index");
+                    }
+
                     var oldStatus = existingAttendance.Status;
                     existingAttendance.FriendName = FriendName;
                     existingAttendance.Status = Status;
                     existingAttendance.Note = Note?.Trim();
                     existingAttendance.UpdatedAt = DateTime.Now;
+
+                    // حساب قديم من غير كلمة سر (اتسجل قبل الخاصية دي) - نحفظله كلمة السر دلوقتي أول مرة
+                    if (string.IsNullOrEmpty(existingAttendance.Password))
+                        existingAttendance.Password = Password;
 
                     if (profilePhoto != null && profilePhoto.Length > 0)
                         existingAttendance.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
@@ -109,6 +133,7 @@ namespace Football_Match.Controllers
                         FriendName = FriendName,
                         Status = Status,
                         Note = Note?.Trim(),
+                        Password = Password,
                         RespondedAt = DateTime.Now
                     };
 
@@ -507,6 +532,9 @@ namespace Football_Match.Controllers
                 await _context.SaveChangesAsync();
 
                 var author = await _context.Attendances.FindAsync(attendanceId.Value);
+
+                var notifTitle = isAdminPost ? "منشور مميز جديد ⭐" : "منشور جديد 📝";
+                _ = _push.SendToAllAsync(notifTitle, $"{author?.FriendName}: {(hasContent ? content!.Trim() : "📎 صورة/فيديو")}", excludeAttendanceId: attendanceId.Value);
 
                 return Json(new
                 {

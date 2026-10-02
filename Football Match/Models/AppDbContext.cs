@@ -18,6 +18,7 @@ namespace Football_Match
         public DbSet<PushSubscriber> PushSubscribers { get; set; }
         public DbSet<Story> Stories { get; set; }
         public DbSet<DirectMessage> DirectMessages { get; set; }
+        public DbSet<MatchSetting> MatchSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
