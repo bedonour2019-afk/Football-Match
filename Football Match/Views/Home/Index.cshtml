@@ -6,11 +6,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>⚽ تسجيل الدخول - كلاسيك ويندوز فيستا / إيرو</title>
+    <title>⚽ تأكيد الحضور - Frutiger Aero Windows</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        @@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Segoe+UI&display=swap');
+        @@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Segoe+UI:wght@400;600;700;800&display=swap');
 
         * {
             box-sizing: border-box;
@@ -18,32 +18,22 @@
             padding: 0;
         }
 
-        :root {
-            --aero-glass-bg: rgba(255, 255, 255, 0.25);
-            --aero-glass-border: rgba(255, 255, 255, 0.7);
-            --aero-glass-shadow: 0 20px 45px rgba(0, 60, 130, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(0, 110, 220, 0.25);
-            --aero-blue-glow: 0 0 25px rgba(0, 195, 255, 0.6);
-            --aero-btn-gradient: linear-gradient(180deg, #6ee5ff 0%, #1ea5f5 50%, #0080d7 51%, #09a2f6 100%);
-            --aero-btn-hover: linear-gradient(180deg, #91ecff 0%, #3bb6ff 50%, #088ee8 51%, #22b1ff 100%);
-        }
-
         body {
-            font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Segoe UI', 'Tajawal', Tahoma, sans-serif;
             min-height: 100vh;
             background: #0288d1 url('/assets/frutiger_aero_bg.jpg') no-repeat center center fixed;
             background-size: cover;
-            color: #0c2340;
+            color: #ffffff;
             position: relative;
             overflow-x: hidden;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 24px 16px;
+            justify-content: center;
+            padding: 20px 16px;
         }
 
-        /* Floating Bubbles Effect */
-        .bubbles-container {
+        /* ===== FLOATING WATER BUBBLES ===== */
+        .bubbles-layer {
             position: fixed;
             inset: 0;
             pointer-events: none;
@@ -51,42 +41,42 @@
             z-index: 1;
         }
 
-        .bubble {
+        .water-bubble {
             position: absolute;
-            bottom: -80px;
+            bottom: -90px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85), rgba(180, 235, 255, 0.4) 60%, rgba(0, 150, 255, 0.25) 90%);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            animation: floatBubble 14s infinite ease-in;
-            opacity: 0.8;
+            background: radial-gradient(circle at 32% 32%, rgba(255, 255, 255, 0.9), rgba(186, 230, 253, 0.35) 60%, rgba(2, 132, 199, 0.2) 90%);
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.6), inset 0 0 12px rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            animation: riseBubble 16s infinite ease-in;
         }
 
-        .bubble:nth-child(1) { left: 8%; width: 45px; height: 45px; animation-duration: 16s; animation-delay: 0s; }
-        .bubble:nth-child(2) { left: 22%; width: 70px; height: 70px; animation-duration: 20s; animation-delay: 3s; }
-        .bubble:nth-child(3) { left: 45%; width: 35px; height: 35px; animation-duration: 14s; animation-delay: 5s; }
-        .bubble:nth-child(4) { left: 68%; width: 55px; height: 55px; animation-duration: 18s; animation-delay: 2s; }
-        .bubble:nth-child(5) { left: 88%; width: 65px; height: 65px; animation-duration: 22s; animation-delay: 6s; }
+        .water-bubble:nth-child(1) { left: 7%; width: 45px; height: 45px; animation-duration: 18s; animation-delay: 0s; }
+        .water-bubble:nth-child(2) { left: 20%; width: 75px; height: 75px; animation-duration: 22s; animation-delay: 3s; }
+        .water-bubble:nth-child(3) { left: 52%; width: 36px; height: 36px; animation-duration: 15s; animation-delay: 5s; }
+        .water-bubble:nth-child(4) { left: 74%; width: 60px; height: 60px; animation-duration: 19s; animation-delay: 2s; }
+        .water-bubble:nth-child(5) { left: 90%; width: 50px; height: 50px; animation-duration: 24s; animation-delay: 7s; }
 
-        @@keyframes floatBubble {
-            0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 0; }
+        @@keyframes riseBubble {
+            0% { transform: translateY(0) scale(0.85); opacity: 0; }
             10% { opacity: 0.85; }
             90% { opacity: 0.85; }
-            100% { transform: translateY(-110vh) scale(1.15) rotate(40deg); opacity: 0; }
+            100% { transform: translateY(-110vh) scale(1.15); opacity: 0; }
         }
 
-        /* Desktop Grid Container */
-        .aero-desktop-wrapper {
+        /* ===== MAIN AERO LAYOUT ===== */
+        .aero-stage {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1180px;
             position: relative;
             z-index: 10;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
-        .aero-widgets-top {
+        /* Top Widgets Row: Weather on Left, Music on Right */
+        .aero-top-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -95,96 +85,105 @@
             width: 100%;
         }
 
-        .aero-center-area {
+        /* Center Row: Clock on right, Welcome Card in center */
+        .aero-center-row {
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
             width: 100%;
-            margin: 10px 0;
         }
 
-        /* Aero Window Common Styling */
-        .aero-window {
-            background: var(--aero-glass-bg);
-            backdrop-filter: blur(28px) saturate(190%);
-            -webkit-backdrop-filter: blur(28px) saturate(190%);
-            border: 1px solid var(--aero-glass-border);
-            border-radius: 20px;
-            box-shadow: var(--aero-glass-shadow);
+        /* ===== ULTRA-TRANSPARENT WATER BUBBLE GLASS CARD ===== */
+        .bubble-glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(186, 230, 253, 0.10) 50%, rgba(255, 255, 255, 0.08) 100%);
+            backdrop-filter: blur(10px) saturate(150%);
+            -webkit-backdrop-filter: blur(10px) saturate(150%);
+            border: 1.5px solid rgba(255, 255, 255, 0.75);
+            border-radius: 26px;
+            box-shadow: 
+                0 20px 50px rgba(0, 45, 95, 0.28),
+                inset 0 1.5px 1px rgba(255, 255, 255, 0.95),
+                inset 0 0 25px rgba(255, 255, 255, 0.12),
+                0 0 25px rgba(56, 189, 248, 0.25);
             position: relative;
             overflow: hidden;
             transition: all 0.25s ease;
         }
 
-        .aero-window::before {
+        /* 3D Curved Specular Bubble Highlight */
+        .bubble-glass-panel::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 38%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 100%);
-            border-top-left-radius: 19px;
-            border-top-right-radius: 19px;
+            height: 42%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.06) 80%, transparent 100%);
+            border-radius: 25px 25px 50% 50% / 25px 25px 22% 22%;
             pointer-events: none;
+            z-index: 2;
         }
 
-        .aero-window-header {
+        .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.35);
-            background: rgba(255, 255, 255, 0.15);
-            font-size: 0.8rem;
+            padding: 8px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 0.82rem;
             font-weight: 700;
-            color: #0b3464;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
             user-select: none;
+            position: relative;
+            z-index: 3;
         }
 
-        .aero-window-title {
+        .panel-title {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .aero-controls {
+        .panel-controls {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .aero-ctrl-btn {
-            width: 19px;
-            height: 19px;
-            border-radius: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.4);
+        .panel-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.25);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 0.65rem;
-            color: #032b57;
+            color: #ffffff;
             cursor: pointer;
             transition: all 0.15s;
             line-height: 1;
         }
-        .aero-ctrl-btn:hover { background: rgba(255, 255, 255, 0.8); }
-        .aero-ctrl-btn.close-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+        .panel-btn:hover { background: rgba(255, 255, 255, 0.6); color: #032b57; }
+        .panel-btn.close:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
-        /* ===== WEATHER WIDGET (Top-Left) ===== */
-        .weather-widget {
+        /* ===== 1. WEATHER WIDGET (Top-Left) ===== */
+        .weather-panel {
             width: 250px;
             flex-shrink: 0;
         }
 
-        .weather-body {
-            padding: 14px 16px;
+        .weather-content {
+            padding: 14px 16px 16px;
             text-align: center;
+            position: relative;
+            z-index: 3;
         }
 
-        .weather-main-row {
+        .weather-main {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -192,187 +191,186 @@
             margin-bottom: 12px;
         }
 
-        .weather-sun-icon {
-            font-size: 2.8rem;
-            color: #ffb703;
-            filter: drop-shadow(0 0 15px rgba(255, 183, 3, 0.8));
-            animation: sunSpin 25s infinite linear;
+        .sun-glowing {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #fff9db, #ffd43b 50%, #f59f00 100%);
+            box-shadow: 0 0 25px rgba(255, 212, 59, 0.9), 0 0 45px rgba(255, 179, 0, 0.5);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #d9480f;
+            flex-shrink: 0;
         }
 
-        @@keyframes sunSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .weather-temp-box {
-            text-align: right;
-        }
-
-        .weather-temp-num {
-            font-size: 2.2rem;
-            font-weight: 900;
+        .weather-temp {
+            font-size: 2.3rem;
+            font-weight: 800;
             line-height: 1;
-            color: #032b57;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 35, 80, 0.7);
         }
 
-        .weather-desc {
-            font-size: 0.85rem;
+        .weather-status {
+            font-size: 0.88rem;
             font-weight: 700;
-            color: #0a437c;
+            color: #e0f2fe;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
         .weather-feels {
-            font-size: 0.7rem;
-            color: rgba(3, 43, 87, 0.7);
+            font-size: 0.72rem;
+            color: rgba(224, 242, 254, 0.85);
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        .forecast-strip {
+        .forecast-row {
             display: flex;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
             padding: 8px 10px;
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            color: #032b57;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        .forecast-day {
+        .forecast-col {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 3px;
         }
+        .forecast-sun { color: #fcc419; font-size: 0.85rem; }
 
-        .forecast-icon {
-            color: #f59e0b;
-            font-size: 0.8rem;
-        }
-
-        /* ===== MUSIC PLAYER WIDGET (Top-Right) ===== */
-        .music-widget {
+        /* ===== 2. NOW PLAYING MUSIC WIDGET (Top-Right) ===== */
+        .music-panel {
             width: 320px;
             flex-shrink: 0;
         }
 
-        .music-body {
-            padding: 14px 16px;
+        .music-content {
+            padding: 14px 16px 14px;
+            position: relative;
+            z-index: 3;
         }
 
-        .music-meta-row {
+        .music-meta {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 12px;
         }
 
-        .music-thumb {
+        .album-art {
             width: 58px;
             height: 58px;
-            border-radius: 12px;
+            border-radius: 14px;
             object-fit: cover;
-            border: 1.5px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 12px rgba(0, 80, 160, 0.3);
-            background: #0288d1;
+            border: 1.5px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 4px 15px rgba(0, 60, 130, 0.4);
             flex-shrink: 0;
         }
 
-        .music-info {
+        .track-info {
             flex: 1;
             overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.7);
         }
 
-        .music-title {
-            font-size: 0.95rem;
+        .track-title {
+            font-size: 0.96rem;
             font-weight: 800;
-            color: #032b57;
+            color: #ffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
         }
 
-        .music-artist {
-            font-size: 0.75rem;
+        .track-artist {
+            font-size: 0.76rem;
             font-weight: 600;
-            color: #0264ab;
+            color: #bae6fd;
         }
 
-        .music-album {
+        .track-album {
             font-size: 0.68rem;
-            color: rgba(3, 43, 87, 0.65);
+            color: rgba(224, 242, 254, 0.8);
         }
 
-        /* Progress Bar */
-        .music-scrubber-box {
+        /* Scrubber */
+        .music-scrubber {
             margin-bottom: 10px;
         }
 
-        .music-slider {
+        .time-range {
             width: 100%;
-            height: 6px;
+            height: 5px;
             -webkit-appearance: none;
             appearance: none;
-            background: rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.35);
             border-radius: 3px;
             outline: none;
             cursor: pointer;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        .music-slider::-webkit-slider-thumb {
+        .time-range::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #0288d1;
+            background: #38bdf8;
             border: 2px solid #ffffff;
-            box-shadow: 0 0 6px rgba(2, 136, 209, 0.8);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform 0.15s;
         }
-        .music-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .time-range::-webkit-slider-thumb:hover { transform: scale(1.25); }
 
-        .music-times {
+        .time-labels {
             display: flex;
             justify-content: space-between;
             font-size: 0.68rem;
             font-weight: 700;
-            color: #032b57;
+            color: #ffffff;
             margin-top: 3px;
             font-family: Consolas, monospace;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        /* Player Controls */
-        .music-controls {
+        .player-controls {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 6px;
         }
 
-        .music-ctrl-btn {
+        .btn-ctrl {
             background: none;
             border: none;
-            color: #033c77;
+            color: #ffffff;
             font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.15s;
-            padding: 4px 6px;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
+            padding: 4px;
         }
-        .music-ctrl-btn:hover { color: #0288d1; transform: scale(1.1); }
+        .btn-ctrl:hover { color: #38bdf8; transform: scale(1.12); }
 
-        .play-pause-btn {
+        .btn-play-bubble {
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            background: var(--aero-btn-gradient);
-            border: 1.5px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 12px rgba(0, 136, 209, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-            color: #fff;
+            background: radial-gradient(circle at 35% 35%, #7dd3fc, #0284c7 60%, #0369a1 100%);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 15px rgba(2, 132, 199, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            color: #ffffff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -380,93 +378,96 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .play-pause-btn:hover {
-            background: var(--aero-btn-hover);
-            transform: scale(1.08);
-            box-shadow: 0 6px 18px rgba(0, 136, 209, 0.7);
+        .btn-play-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 22px rgba(2, 132, 199, 0.9);
         }
 
-        /* ===== CLOCK & DATE WIDGET (Middle-Right on Desktop) ===== */
-        .clock-widget {
+        /* ===== 3. CLOCK WIDGET (Middle-Right on Desktop) ===== */
+        .clock-panel {
             position: absolute;
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            width: 180px;
+            width: 175px;
             text-align: center;
             padding: 16px 14px;
             display: none;
+            z-index: 5;
         }
 
         @@media (min-width: 992px) {
-            .clock-widget { display: block; }
+            .clock-panel { display: block; }
         }
 
-        .clock-earth-icon {
-            font-size: 2.2rem;
-            color: #0288d1;
-            filter: drop-shadow(0 0 10px rgba(2, 136, 209, 0.6));
+        .earth-icon {
+            font-size: 2.4rem;
+            color: #38bdf8;
+            filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8));
             margin-bottom: 8px;
             display: inline-block;
         }
 
-        .clock-time-text {
+        .clock-time {
             font-size: 1.35rem;
-            font-weight: 900;
-            color: #032b57;
+            font-weight: 800;
+            color: #ffffff;
             line-height: 1.1;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 1px 3px rgba(0, 35, 80, 0.7);
         }
 
-        .clock-date-text {
+        .clock-date {
             font-size: 0.74rem;
-            color: rgba(3, 43, 87, 0.8);
+            color: rgba(224, 242, 254, 0.9);
             font-weight: 600;
             margin-top: 4px;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        .clock-eco-badge {
+        .eco-badge {
             margin-top: 8px;
             font-size: 0.66rem;
-            color: #047857;
+            color: #a7f3d0;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 4px;
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.4);
             border-radius: 8px;
             padding: 3px 6px;
         }
 
-        /* ===== MAIN WELCOME LOGIN / REGISTRATION CARD ===== */
-        .welcome-card {
+        /* ===== 4. WELCOME LOGIN & REGISTRATION CARD (Center) ===== */
+        .welcome-panel {
             width: 100%;
-            max-width: 460px;
+            max-width: 440px;
             margin: 0 auto;
         }
 
-        .welcome-body {
+        .welcome-content {
             padding: 24px 26px 20px;
             text-align: center;
+            position: relative;
+            z-index: 3;
         }
 
-        /* User Avatar Circle */
-        .welcome-avatar-wrap {
+        /* User Avatar Sphere */
+        .avatar-sphere-wrapper {
             position: relative;
             display: inline-block;
             margin-bottom: 12px;
             cursor: pointer;
         }
 
-        .welcome-avatar {
-            width: 86px;
-            height: 86px;
+        .avatar-sphere {
+            width: 82px;
+            height: 82px;
             border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), rgba(180, 230, 255, 0.8) 60%, rgba(3, 169, 244, 0.7) 100%);
-            border: 3px solid rgba(255, 255, 255, 0.95);
-            box-shadow: 0 8px 24px rgba(0, 110, 220, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+            background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.9), rgba(186, 230, 253, 0.7) 60%, rgba(2, 132, 199, 0.8) 100%);
+            border: 2.5px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 25px rgba(2, 132, 199, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -474,115 +475,122 @@
             overflow: hidden;
             transition: all 0.25s;
         }
-        .welcome-avatar:hover {
-            transform: scale(1.04);
-            box-shadow: 0 10px 28px rgba(0, 150, 255, 0.6);
+        .avatar-sphere:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.8);
         }
 
-        .welcome-avatar i {
-            font-size: 2.8rem;
-            color: #0264ab;
+        .avatar-sphere i {
+            font-size: 2.7rem;
+            color: #0369a1;
         }
 
-        .welcome-avatar img {
+        .avatar-sphere img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .avatar-upload-hint {
+        .avatar-hint {
             font-size: 0.72rem;
-            color: #0264ab;
+            color: #e0f2fe;
             font-weight: 700;
             margin-top: 4px;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        .welcome-title {
-            font-size: 1.6rem;
-            font-weight: 900;
-            color: #032b57;
+        .welcome-heading {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #ffffff;
             margin-bottom: 2px;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+            text-shadow: 0 2px 4px rgba(0, 35, 80, 0.7);
         }
 
-        .welcome-subtitle {
+        .welcome-sub {
             font-size: 0.84rem;
-            color: rgba(3, 43, 87, 0.75);
+            color: rgba(224, 242, 254, 0.9);
             font-weight: 600;
             margin-bottom: 18px;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        /* Aero Input Fields */
-        .aero-input-group {
+        /* Glass Input Fields */
+        .glass-input-wrapper {
             position: relative;
-            margin-bottom: 12px;
+            margin-bottom: 11px;
             text-align: right;
         }
 
-        .aero-input-icon {
+        .glass-input-icon {
             position: absolute;
             right: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #0369a1;
+            color: #bae6fd;
             font-size: 0.95rem;
             pointer-events: none;
+            filter: drop-shadow(0 1px 2px rgba(0, 35, 80, 0.6));
         }
 
-        .aero-input {
+        .glass-input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.55);
-            border: 1.5px solid rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.65);
             border-radius: 12px;
-            padding: 10px 40px 10px 14px;
+            padding: 10px 42px 10px 14px;
             font-size: 0.92rem;
             font-weight: 600;
-            color: #032b57;
+            color: #ffffff;
             outline: none;
             transition: all 0.2s;
-            box-shadow: inset 0 2px 4px rgba(0, 50, 100, 0.08), 0 1px 0 rgba(255, 255, 255, 0.9);
+            box-shadow: inset 0 1px 3px rgba(0, 30, 70, 0.15), 0 1px 0 rgba(255, 255, 255, 0.4);
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.5);
         }
-        .aero-input:focus {
-            background: rgba(255, 255, 255, 0.85);
-            border-color: #00b4d8;
-            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.35), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.28);
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4), inset 0 1px 2px rgba(0, 0, 0, 0.1);
         }
-        .aero-input::placeholder {
-            color: rgba(3, 50, 95, 0.45);
+
+        .glass-input::placeholder {
+            color: rgba(224, 242, 254, 0.7);
             font-weight: 500;
         }
 
-        .pw-toggle-btn {
+        .pw-eye-btn {
             position: absolute;
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: rgba(3, 50, 95, 0.5);
+            color: rgba(255, 255, 255, 0.75);
             cursor: pointer;
             padding: 4px;
             font-size: 0.9rem;
             transition: color 0.15s;
         }
-        .pw-toggle-btn:hover { color: #0288d1; }
+        .pw-eye-btn:hover { color: #38bdf8; }
 
-        /* Status Options Strip */
-        .status-bubbles-row {
+        /* Status Options (Water Bubble Style) */
+        .status-row {
             display: flex;
             gap: 8px;
             margin: 14px 0 12px;
         }
 
-        .status-bubble-btn {
+        .status-bubble {
             flex: 1;
             padding: 9px 6px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.14);
+            border: 1.5px solid rgba(255, 255, 255, 0.55);
             font-size: 0.8rem;
             font-weight: 700;
-            color: #032b57;
+            color: #ffffff;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
@@ -590,143 +598,161 @@
             align-items: center;
             gap: 3px;
             user-select: none;
+            backdrop-filter: blur(6px);
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
-        .status-bubble-btn:hover {
-            background: rgba(255, 255, 255, 0.65);
+
+        .status-bubble:hover {
+            background: rgba(255, 255, 255, 0.28);
             transform: translateY(-2px);
         }
 
-        .status-bubble-btn.selected-going {
-            background: linear-gradient(180deg, rgba(34, 197, 94, 0.35), rgba(34, 197, 94, 0.65));
-            border-color: #22c55e;
-            color: #064e3b;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        .status-bubble.selected-going {
+            background: radial-gradient(circle at 35% 35%, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.8));
+            border-color: #86efac;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
         }
-        .status-bubble-btn.selected-maybe {
-            background: linear-gradient(180deg, rgba(245, 158, 11, 0.35), rgba(245, 158, 11, 0.65));
-            border-color: #f59e0b;
-            color: #78350f;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+        .status-bubble.selected-maybe {
+            background: radial-gradient(circle at 35% 35%, rgba(245, 158, 11, 0.5), rgba(217, 119, 6, 0.8));
+            border-color: #fde047;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
         }
-        .status-bubble-btn.selected-notgoing {
-            background: linear-gradient(180deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.65));
-            border-color: #ef4444;
-            color: #7f1d1d;
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        .status-bubble.selected-notgoing {
+            background: radial-gradient(circle at 35% 35%, rgba(239, 68, 68, 0.5), rgba(220, 38, 38, 0.8));
+            border-color: #fca5a5;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
         }
 
-        /* Sign In Main Button */
-        .aero-btn-signin {
+        /* Sign In Cyan Glossy Button */
+        .signin-bubble-btn {
             width: 100%;
-            padding: 13px;
-            background: var(--aero-btn-gradient);
+            padding: 12px 20px;
+            background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 48%, #0284c7 52%, #0369a1 100%);
             border: 2px solid rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            color: #fff;
+            border-radius: 30px;
+            color: #ffffff;
             font-size: 1.08rem;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.25s;
-            box-shadow: 0 8px 24px rgba(0, 110, 220, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 8px 25px rgba(2, 132, 199, 0.55),
+                inset 0 1px 1px rgba(255, 255, 255, 0.9),
+                inset 0 -2px 4px rgba(0, 40, 80, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             margin-top: 6px;
-            text-shadow: 0 1px 2px rgba(0, 60, 120, 0.6);
-        }
-        .aero-btn-signin:hover {
-            background: var(--aero-btn-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(0, 130, 255, 0.55);
+            text-shadow: 0 1px 2px rgba(0, 30, 70, 0.8);
         }
 
-        /* Extra Links Bar */
-        .welcome-links-row {
+        .signin-bubble-btn:hover {
+            background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 48%, #0284c7 52%, #0284c7 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(2, 132, 199, 0.75);
+        }
+
+        .btn-arrow-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .welcome-footer-links {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-top: 14px;
             font-size: 0.78rem;
             font-weight: 700;
-            color: #034887;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
         }
 
-        .welcome-links-row a {
-            color: #0264ab;
+        .welcome-footer-links a {
+            color: #bae6fd;
             text-decoration: none;
             transition: color 0.15s;
         }
-        .welcome-links-row a:hover { color: #0288d1; text-decoration: underline; }
+        .welcome-footer-links a:hover { color: #ffffff; text-decoration: underline; }
 
-        /* Window Bottom Taskbar Icons (Options / Settings / Shut Down) */
-        .aero-bottom-bar {
+        /* Window Bottom Options (Options, Settings, Shut down) */
+        .bottom-taskbar {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 24px;
+            gap: 26px;
             padding-top: 16px;
             margin-top: 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.35);
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
         }
 
-        .aero-bottom-item {
+        .bottom-task-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 3px;
             font-size: 0.7rem;
             font-weight: 700;
-            color: #033c77;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
             text-decoration: none;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .aero-bottom-item:hover {
-            color: #0288d1;
+        .bottom-task-item:hover {
+            color: #38bdf8;
             transform: translateY(-2px);
         }
-        .aero-bottom-item i {
+        .bottom-task-item i {
             font-size: 1.15rem;
         }
 
-        /* Music Autoplay Notification Toast */
-        .autoplay-toast {
+        /* Floating Audio Prompt Toast */
+        .audio-toast {
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            border: 1.5px solid rgba(255, 255, 255, 0.8);
             border-radius: 16px;
             padding: 10px 18px;
-            box-shadow: 0 12px 30px rgba(0, 70, 150, 0.3);
+            box-shadow: 0 12px 30px rgba(0, 50, 120, 0.35);
             display: flex;
             align-items: center;
             gap: 10px;
             font-size: 0.85rem;
             font-weight: 700;
-            color: #032b57;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 35, 80, 0.6);
             z-index: 1000;
             cursor: pointer;
-            animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: toastSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        @@keyframes bounceIn {
+        @@keyframes toastSlide {
             from { transform: translateY(50px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* Mobile Adjustments */
-        @@media (max-width: 768px) {
-            .aero-widgets-top {
+        /* Mobile Layout */
+        @@media (max-width: 991px) {
+            .aero-top-row {
                 flex-direction: column;
                 align-items: stretch;
             }
-            .weather-widget, .music-widget {
+            .weather-panel, .music-panel {
                 width: 100%;
             }
-            .welcome-card {
+            .welcome-panel {
                 max-width: 100%;
             }
             body {
@@ -738,62 +764,64 @@
 <body>
 
     <!-- Floating Water Bubbles -->
-    <div class="bubbles-container">
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
+    <div class="bubbles-layer">
+        <div class="water-bubble"></div>
+        <div class="water-bubble"></div>
+        <div class="water-bubble"></div>
+        <div class="water-bubble"></div>
+        <div class="water-bubble"></div>
     </div>
 
-    <!-- Hidden HTML5 Audio Element playing user's uploaded track -->
+    <!-- Hidden HTML5 Audio Element -->
     <audio id="bgMusic" src="/assets/welcome_music.mp3" preload="auto" loop></audio>
 
-    <div class="aero-desktop-wrapper">
+    <div class="aero-stage">
 
-        <!-- Top Widgets Row (Weather on Left, Music Player on Right) -->
-        <div class="aero-widgets-top">
+        <!-- Top Widgets Row (Weather on Left, Now Playing on Right) -->
+        <div class="aero-top-row">
 
             <!-- 1. WEATHER WIDGET (Top-Left) -->
-            <div class="aero-window weather-widget">
-                <div class="aero-window-header">
-                    <div class="aero-window-title">
-                        <i class="fas fa-sun" style="color:#ffb703;"></i>
+            <div class="bubble-glass-panel weather-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-sun" style="color:#ffd43b;"></i>
                         <span>Weather</span>
                     </div>
-                    <div class="aero-controls">
-                        <button type="button" class="aero-ctrl-btn" title="تصغير">─</button>
-                        <button type="button" class="aero-ctrl-btn close-btn" title="إغلاق">✕</button>
+                    <div class="panel-controls">
+                        <button type="button" class="panel-btn" title="تصغير">─</button>
+                        <button type="button" class="panel-btn close" title="إغلاق">✕</button>
                     </div>
                 </div>
-                <div class="weather-body">
-                    <div class="weather-main-row">
-                        <i class="fas fa-sun weather-sun-icon"></i>
-                        <div class="weather-temp-box">
-                            <div class="weather-temp-num" id="weatherTemp">24°</div>
-                            <div class="weather-desc" id="weatherDesc">Sunny</div>
+                <div class="weather-content">
+                    <div class="weather-main">
+                        <div class="sun-glowing">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="weather-temp" id="weatherTemp">24°</div>
+                            <div class="weather-status" id="weatherDesc">Sunny</div>
                             <div class="weather-feels" id="weatherFeels">Feels like 24°</div>
                         </div>
                     </div>
-                    <div class="forecast-strip">
-                        <div class="forecast-day">
+                    <div class="forecast-row">
+                        <div class="forecast-col">
                             <span>Mon</span>
-                            <i class="fas fa-sun forecast-icon"></i>
+                            <i class="fas fa-sun forecast-sun"></i>
                             <span>24°/18°</span>
                         </div>
-                        <div class="forecast-day">
+                        <div class="forecast-col">
                             <span>Tue</span>
-                            <i class="fas fa-sun forecast-icon"></i>
+                            <i class="fas fa-sun forecast-sun"></i>
                             <span>25°/19°</span>
                         </div>
-                        <div class="forecast-day">
+                        <div class="forecast-col">
                             <span>Wed</span>
-                            <i class="fas fa-sun forecast-icon"></i>
+                            <i class="fas fa-sun forecast-sun"></i>
                             <span>26°/19°</span>
                         </div>
-                        <div class="forecast-day">
+                        <div class="forecast-col">
                             <span>Thu</span>
-                            <i class="fas fa-sun forecast-icon"></i>
+                            <i class="fas fa-sun forecast-sun"></i>
                             <span>25°/18°</span>
                         </div>
                     </div>
@@ -801,94 +829,94 @@
             </div>
 
             <!-- 2. MUSIC PLAYER WIDGET (Top-Right) -->
-            <div class="aero-window music-widget">
-                <div class="aero-window-header">
-                    <div class="aero-window-title">
-                        <i class="fas fa-music" style="color:#0288d1;"></i>
+            <div class="bubble-glass-panel music-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-music" style="color:#38bdf8;"></i>
                         <span>Now Playing</span>
                     </div>
-                    <div class="aero-controls">
-                        <button type="button" class="aero-ctrl-btn" title="تصغير">─</button>
-                        <button type="button" class="aero-ctrl-btn close-btn" title="إغلاق">✕</button>
+                    <div class="panel-controls">
+                        <button type="button" class="panel-btn" title="تصغير">─</button>
+                        <button type="button" class="panel-btn close" title="إغلاق">✕</button>
                     </div>
                 </div>
-                <div class="music-body">
-                    <div class="music-meta-row">
-                        <img src="/assets/frutiger_aero_bg.jpg" class="music-thumb" alt="Album Art" />
-                        <div class="music-info">
-                            <div class="music-title">Ocean Breeze</div>
-                            <div class="music-artist">Clear Skies</div>
-                            <div class="music-album">A Brighter Tomorrow</div>
+                <div class="music-content">
+                    <div class="music-meta">
+                        <img src="/assets/frutiger_aero_bg.jpg" class="album-art" alt="Album Art" />
+                        <div class="track-info">
+                            <div class="track-title">Ocean Breeze</div>
+                            <div class="track-artist">Clear Skies</div>
+                            <div class="track-album">A Brighter Tomorrow</div>
                         </div>
                     </div>
 
                     <!-- Scrubber Timeline -->
-                    <div class="music-scrubber-box">
-                        <input type="range" class="music-slider" id="musicScrubber" value="0" min="0" max="100" />
-                        <div class="music-times">
+                    <div class="music-scrubber">
+                        <input type="range" class="time-range" id="musicScrubber" value="0" min="0" max="100" />
+                        <div class="time-labels">
                             <span id="currentTime">00:00</span>
                             <span id="totalDuration">02:05</span>
                         </div>
                     </div>
 
                     <!-- Controls: Shuffle, Prev, Play/Pause, Next, Volume -->
-                    <div class="music-controls">
-                        <button type="button" class="music-ctrl-btn" title="عشوائي"><i class="fas fa-random"></i></button>
-                        <button type="button" class="music-ctrl-btn" id="btnPrev" title="السابق"><i class="fas fa-step-backward"></i></button>
-                        <button type="button" class="play-pause-btn" id="btnPlayPause" title="تشغيل / إيقاف">
+                    <div class="player-controls">
+                        <button type="button" class="btn-ctrl" title="عشوائي"><i class="fas fa-random"></i></button>
+                        <button type="button" class="btn-ctrl" id="btnPrev" title="السابق"><i class="fas fa-step-backward"></i></button>
+                        <button type="button" class="btn-play-bubble" id="btnPlayPause" title="تشغيل / إيقاف">
                             <i class="fas fa-play" id="playIcon"></i>
                         </button>
-                        <button type="button" class="music-ctrl-btn" id="btnNext" title="التالي"><i class="fas fa-step-forward"></i></button>
-                        <button type="button" class="music-ctrl-btn" id="btnVolume" title="كتم / تشغيل الصوت"><i class="fas fa-volume-up" id="volIcon"></i></button>
+                        <button type="button" class="btn-ctrl" id="btnNext" title="التالي"><i class="fas fa-step-forward"></i></button>
+                        <button type="button" class="btn-ctrl" id="btnVolume" title="كتم / تشغيل الصوت"><i class="fas fa-volume-up" id="volIcon"></i></button>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- Center Area: Clock on the side & Welcome Window in the center -->
-        <div class="aero-center-area">
+        <!-- Center Row: Clock Widget on side & Main Welcome Registration Card in Center -->
+        <div class="aero-center-row">
 
-            <!-- 3. CLOCK & DATE WIDGET (Right on Desktop) -->
-            <div class="aero-window clock-widget">
-                <i class="fas fa-globe-americas clock-earth-icon"></i>
-                <div class="clock-time-text" id="liveClockTime">10:24 AM</div>
-                <div class="clock-date-text" id="liveClockDate">Saturday, May 15, 2004</div>
-                <div class="clock-eco-badge">
+            <!-- 3. CLOCK & DATE WIDGET (Middle-Right on Desktop) -->
+            <div class="bubble-glass-panel clock-panel">
+                <i class="fas fa-globe-americas earth-icon"></i>
+                <div class="clock-time" id="liveClockTime">10:24 AM</div>
+                <div class="clock-date" id="liveClockDate">Saturday, May 15, 2004</div>
+                <div class="eco-badge">
                     <i class="fas fa-leaf"></i>
                     <span>A Cleaner Tomorrow</span>
                 </div>
             </div>
 
             <!-- 4. CENTER MAIN WELCOME REGISTRATION WINDOW -->
-            <div class="aero-window welcome-card">
-                <div class="aero-window-header">
-                    <div class="aero-window-title">
-                        <i class="fas fa-futbol" style="color:#0288d1;"></i>
+            <div class="bubble-glass-panel welcome-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-futbol" style="color:#38bdf8;"></i>
                         <span>Match Registration • تأكيد الحضور</span>
                     </div>
-                    <div class="aero-controls">
-                        <button type="button" class="aero-ctrl-btn" title="تصغير">─</button>
-                        <button type="button" class="aero-ctrl-btn close-btn" title="إغلاق">✕</button>
+                    <div class="panel-controls">
+                        <button type="button" class="panel-btn" title="تصغير">─</button>
+                        <button type="button" class="panel-btn close" title="إغلاق">✕</button>
                     </div>
                 </div>
 
-                <div class="welcome-body">
+                <div class="welcome-content">
                     <!-- Avatar Area -->
-                    <div class="welcome-avatar-wrap" onclick="document.getElementById('profilePhoto').click()">
-                        <div class="welcome-avatar" id="avatarBox">
+                    <div class="avatar-sphere-wrapper" onclick="document.getElementById('profilePhoto').click()">
+                        <div class="avatar-sphere" id="avatarBox">
                             <i class="fas fa-user" id="defaultUserIcon"></i>
                             <img id="avatarImg" src="" style="display:none;" />
                         </div>
-                        <div class="avatar-upload-hint"><i class="fas fa-camera me-1"></i>اختر صورة شخصية</div>
+                        <div class="avatar-hint"><i class="fas fa-camera me-1"></i>صورة شخصية (اختياري)</div>
                     </div>
 
-                    <h1 class="welcome-title">Welcome</h1>
-                    <p class="welcome-subtitle">Sign in to continue • سجّل موقفك وانضم للغرفة مع الشباب</p>
+                    <h1 class="welcome-heading">Welcome</h1>
+                    <p class="welcome-sub">Sign in to continue • سجّل موقفك وانضم للغرفة</p>
 
                     @if (TempData["ErrorMessage"] != null)
                     {
-                        <div style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.5);color:#991b1b;border-radius:12px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;font-weight:700;">
+                        <div style="background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.7);color:#ffffff;border-radius:12px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,0.5);">
                             <i class="fas fa-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
                         </div>
                     }
@@ -898,39 +926,39 @@
                         <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" style="display:none;" onchange="previewPhoto(this)" />
 
                         <!-- Phone / Username -->
-                        <div class="aero-input-group">
-                            <i class="fas fa-phone-alt aero-input-icon"></i>
-                            <input type="tel" name="PhoneNumber" class="aero-input" placeholder="رقم الموبايل (01xxxxxxxxx)" required autocomplete="tel" />
+                        <div class="glass-input-wrapper">
+                            <i class="fas fa-phone-alt glass-input-icon"></i>
+                            <input type="tel" name="PhoneNumber" class="glass-input" placeholder="رقم الموبايل (01xxxxxxxxx)" required autocomplete="tel" />
                         </div>
 
                         <!-- Password -->
-                        <div class="aero-input-group">
-                            <i class="fas fa-lock aero-input-icon"></i>
-                            <input type="password" id="userPasswordInput" name="Password" class="aero-input" style="padding-left:42px;" placeholder="كلمة السر..." required minlength="4" autocomplete="current-password" />
-                            <button type="button" class="pw-toggle-btn" onclick="togglePasswordVisibility()" title="إظهار/إخفاء">
+                        <div class="glass-input-wrapper">
+                            <i class="fas fa-lock glass-input-icon"></i>
+                            <input type="password" id="userPasswordInput" name="Password" class="glass-input" style="padding-left:42px;" placeholder="كلمة السر..." required minlength="4" autocomplete="current-password" />
+                            <button type="button" class="pw-eye-btn" onclick="togglePasswordVisibility()" title="إظهار/إخفاء">
                                 <i class="fas fa-eye" id="pwIcon"></i>
                             </button>
                         </div>
 
                         <!-- Name -->
-                        <div class="aero-input-group">
-                            <i class="fas fa-user-tag aero-input-icon"></i>
-                            <input type="text" name="FriendName" class="aero-input" placeholder="اسمك بالكامل..." required autocomplete="name" />
+                        <div class="glass-input-wrapper">
+                            <i class="fas fa-user-tag glass-input-icon"></i>
+                            <input type="text" name="FriendName" class="glass-input" placeholder="اسمك بالكامل..." required autocomplete="name" />
                         </div>
 
                         <!-- Status Selection (Pill Buttons) -->
                         <div style="text-align:right;margin:12px 0 4px;">
-                            <label style="font-size:0.78rem;font-weight:700;color:#033c77;">موقفك من الماتش:</label>
-                            <div class="status-bubbles-row">
-                                <div class="status-bubble-btn selected-going" onclick="pickStatus('جاي أكيد', this, 'selected-going')">
+                            <label style="font-size:0.8rem;font-weight:700;color:#ffffff;text-shadow:0 1px 2px rgba(0,35,80,0.7);">موقفك من الماتش:</label>
+                            <div class="status-row">
+                                <div class="status-bubble selected-going" onclick="pickStatus('جاي أكيد', this, 'selected-going')">
                                     <span style="font-size:1.1rem;">✅</span>
                                     <span>جاي أكيد</span>
                                 </div>
-                                <div class="status-bubble-btn" onclick="pickStatus('احتمال أجي', this, 'selected-maybe')">
+                                <div class="status-bubble" onclick="pickStatus('احتمال أجي', this, 'selected-maybe')">
                                     <span style="font-size:1.1rem;">❓</span>
                                     <span>احتمال أجي</span>
                                 </div>
-                                <div class="status-bubble-btn" onclick="pickStatus('مش جاي', this, 'selected-notgoing')">
+                                <div class="status-bubble" onclick="pickStatus('مش جاي', this, 'selected-notgoing')">
                                     <span style="font-size:1.1rem;">❌</span>
                                     <span>مش جاي</span>
                                 </div>
@@ -939,40 +967,40 @@
                         </div>
 
                         <!-- Note -->
-                        <div class="aero-input-group">
-                            <i class="fas fa-comment-dots aero-input-icon"></i>
-                            <input type="text" name="Note" class="aero-input" placeholder="ملاحظة إضافية (اختياري)..." />
+                        <div class="glass-input-wrapper">
+                            <i class="fas fa-comment-dots glass-input-icon"></i>
+                            <input type="text" name="Note" class="glass-input" placeholder="ملاحظة إضافية (اختياري)..." />
                         </div>
 
                         <!-- Submit Button (Glossy Cyan Aero Pill) -->
-                        <button type="submit" class="aero-btn-signin" id="submitBtn">
+                        <button type="submit" class="signin-bubble-btn" id="submitBtn">
                             <span>Sign In • تأكيد الدخول</span>
-                            <i class="fas fa-arrow-left"></i>
+                            <span class="btn-arrow-circle"><i class="fas fa-arrow-left"></i></span>
                         </button>
                     </form>
 
                     <!-- Links Row -->
-                    <div class="welcome-links-row">
+                    <div class="welcome-footer-links">
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                            <input type="checkbox" checked style="accent-color:#0288d1;" />
-                            <span>تذكرني</span>
+                            <input type="checkbox" checked style="accent-color:#38bdf8;" />
+                            <span>Remember me • تذكرني</span>
                         </label>
                         <a asp-controller="Home" asp-action="Login">دخول الأدمن 🔐</a>
                     </div>
 
                     <!-- Bottom Bar (Options, Settings, Shut down) -->
-                    <div class="aero-bottom-bar">
-                        <div class="aero-bottom-item" onclick="toggleMusicWidget()">
+                    <div class="bottom-taskbar">
+                        <div class="bottom-task-item" onclick="toggleMusicPlayback()">
                             <i class="fas fa-globe"></i>
-                            <span>الموسيقى</span>
+                            <span>Options</span>
                         </div>
-                        <a asp-controller="Home" asp-action="Login" class="aero-bottom-item">
+                        <a asp-controller="Home" asp-action="Login" class="bottom-task-item">
                             <i class="fas fa-cog"></i>
-                            <span>الأدمن</span>
+                            <span>Settings</span>
                         </a>
-                        <a href="/Home/Room" class="aero-bottom-item">
+                        <a href="/Home/Room" class="bottom-task-item">
                             <i class="fas fa-power-off"></i>
-                            <span>الغرفة</span>
+                            <span>Shut down</span>
                         </a>
                     </div>
 
@@ -983,14 +1011,14 @@
 
     </div>
 
-    <!-- Autoplay Prompt Toast (if browser blocked sound autoplay initially) -->
-    <div class="autoplay-toast" id="autoplayPrompt" onclick="startMusicFromToast()" style="display:none;">
-        <i class="fas fa-volume-up fa-lg" style="color:#0288d1;"></i>
+    <!-- Autoplay Notification Toast (إذا منع المتصفح الصوت قبل النقرة الأولى) -->
+    <div class="audio-toast" id="autoplayPrompt" onclick="startMusicFromToast()" style="display:none;">
+        <i class="fas fa-volume-up fa-lg" style="color:#38bdf8;"></i>
         <span>اضغط هنا لتشغيل الموسيقى 🎵</span>
     </div>
 
     <script>
-        // ===== MUSIC PLAYER LOGIC =====
+        // ===== MUSIC PLAYER SCRIPT =====
         const audio = document.getElementById("bgMusic");
         const btnPlayPause = document.getElementById("btnPlayPause");
         const playIcon = document.getElementById("playIcon");
@@ -1016,7 +1044,7 @@
                 playIcon.className = "fas fa-pause";
                 if (autoplayToast) autoplayToast.style.display = "none";
             }).catch(err => {
-                console.log("Autoplay waiting for interaction:", err);
+                console.log("Autoplay paused by browser policy:", err);
                 if (autoplayToast) autoplayToast.style.display = "flex";
             });
         }
@@ -1040,7 +1068,7 @@
             if (autoplayToast) autoplayToast.style.display = "none";
         }
 
-        // Auto-play attempt on load + fallback on first user interaction
+        // Try autoplay on page load + unlock on first interaction
         window.addEventListener("DOMContentLoaded", () => {
             playMusic();
 
@@ -1058,7 +1086,7 @@
             document.addEventListener("keydown", startOnInteraction);
         });
 
-        // Time Updates
+        // Track scrubber update
         audio.addEventListener("timeupdate", () => {
             if (audio.duration) {
                 const percent = (audio.currentTime / audio.duration) * 100;
@@ -1072,7 +1100,7 @@
             totalDurationEl.textContent = formatTime(audio.duration);
         });
 
-        // Scrubber Seeking
+        // Seek
         scrubber.addEventListener("input", () => {
             if (audio.duration) {
                 const seekTo = (scrubber.value / 100) * audio.duration;
@@ -1090,7 +1118,7 @@
             }
         });
 
-        function toggleMusicWidget() {
+        function toggleMusicPlayback() {
             if (isPlaying) pauseMusic();
             else playMusic();
         }
@@ -1118,7 +1146,7 @@
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // Optional Live Weather fetch via free Open-Meteo API
+        // Optional Live Weather fetch via Open-Meteo
         fetch("https://api.open-meteo.com/v1/forecast?latitude=30.0444&longitude=31.2357&current_weather=true")
             .then(res => res.json())
             .then(data => {
@@ -1130,11 +1158,11 @@
                     if (feelsEl) feelsEl.textContent = `Feels like ${temp}°`;
                 }
             })
-            .catch(() => { /* Defaults to iconic 24° Sunny */ });
+            .catch(() => { /* Default to iconic 24° Sunny */ });
 
-        // ===== FORM & UI HELPERS =====
+        // ===== FORM INTERACTION =====
         function pickStatus(val, el, cls) {
-            document.querySelectorAll(".status-bubble-btn").forEach(b => {
+            document.querySelectorAll(".status-bubble").forEach(b => {
                 b.classList.remove("selected-going", "selected-maybe", "selected-notgoing");
             });
             el.classList.add(cls);
@@ -1171,7 +1199,7 @@
             const btn = document.getElementById("submitBtn");
             if (btn) {
                 btn.innerHTML = '<span>جاري الدخول...</span> <i class="fas fa-spinner fa-spin"></i>';
-                btn.style.opacity = '0.8';
+                btn.style.opacity = '0.85';
             }
         });
     </script>
