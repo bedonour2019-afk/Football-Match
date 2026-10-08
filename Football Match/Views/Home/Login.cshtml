@@ -10,251 +10,385 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
 
-        body {
-            background: linear-gradient(135deg, #090714 0%, #151035 50%, #0d0a1d 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, -apple-system, sans-serif;
-            padding: 20px;
-        }
+            body {
+                background: linear-gradient(180deg, #0088ff 0%, #0055d4 40%, #002288 100%), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80') no-repeat center center fixed;
+                background-size: cover;
+                color: #ffffff;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Segoe UI', Tahoma, -apple-system, sans-serif;
+                padding: 15px;
+                position: relative;
+                overflow-x: hidden;
+            }
 
-        .login-card {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            width: 100%;
-            max-width: 420px;
-            padding: 38px 32px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-            position: relative;
-            overflow: hidden;
-        }
+                /* خلفية الفقاعات الرقمية */
+                body::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.18) 2px, transparent 2px), radial-gradient(circle at 75% 40%, rgba(255,255,255,0.15) 2px, transparent 2px), radial-gradient(circle at 40% 70%, rgba(255,255,255,0.2) 2px, transparent 2px);
+                    background-size: 90px 90px, 130px 130px, 110px 110px;
+                    opacity: 0.8;
+                    pointer-events: none;
+                }
 
-        .login-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #8b5cf6, #3b82f6, #ec4899);
-        }
+            /* الحاوية الرئيسية للتجميع */
+            .wrapper {
+                width: 100%;
+                max-width: 390px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
 
-        .logo-area {
-            text-align: center;
-            margin-bottom: 28px;
-        }
+            /* --- ويدجت الطقس والموسيقى العلوية --- */
+            .top-widgets {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+            }
 
-        .shield-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.15));
-            border: 1px solid rgba(139, 92, 246, 0.4);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: #c4b5fd;
-            margin-bottom: 12px;
-            box-shadow: 0 0 25px rgba(139, 92, 246, 0.25);
-        }
+            .glass-widget {
+                flex: 1;
+                background: rgba(255, 255, 255, 0.12);
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+                border: 1.5px solid rgba(255, 255, 255, 0.35);
+                border-radius: 18px;
+                padding: 10px 12px;
+                box-shadow: 0 8px 25px rgba(0, 80, 200, 0.25);
+                font-size: 0.75rem;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
 
-        .logo-area h3 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 4px;
-        }
+            .widget-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+                padding-bottom: 4px;
+                margin-bottom: 6px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.9);
+            }
 
-        .logo-area p {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.82rem;
-        }
+            /* تفاصيل ويدجت الطقس */
+            .weather-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
 
-        .form-label-custom {
-            color: rgba(255, 255, 255, 0.75);
-            font-size: 0.84rem;
-            font-weight: 600;
-            margin-bottom: 7px;
-            display: block;
-        }
+            .weather-temp {
+                font-size: 1.15rem;
+                font-weight: bold;
+                color: #fff;
+            }
 
-        .input-group-custom {
-            position: relative;
-            margin-bottom: 20px;
-        }
+            /* تفاصيل ويدجت الموسيقى */
+            .music-content {
+                text-align: center;
+            }
 
-        .input-icon {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 0.95rem;
-        }
+            .music-title {
+                font-size: 0.78rem;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
 
-        .form-control-custom {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            color: #fff;
-            padding: 12px 42px 12px 16px;
-            font-size: 0.92rem;
-            outline: none;
-            transition: all 0.2s;
-        }
+            .music-controls {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+                margin-top: 4px;
+                font-size: 0.85rem;
+                color: #00f2fe;
+            }
 
-        .form-control-custom:focus {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.08);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
-        }
+            /* --- كارت الدخول الرئيسي --- */
+            .login-card {
+                background: rgba(255, 255, 255, 0.12);
+                backdrop-filter: blur(25px) saturate(190%);
+                -webkit-backdrop-filter: blur(25px) saturate(190%);
+                border: 2px solid rgba(255, 255, 255, 0.35);
+                border-radius: 26px;
+                width: 100%;
+                padding: 26px 20px;
+                box-shadow: 0 20px 50px rgba(0, 100, 255, 0.3), inset 0 0 25px rgba(255, 255, 255, 0.15);
+                position: relative;
+                overflow: hidden;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            }
 
-        .form-control-custom::placeholder {
-            color: rgba(255, 255, 255, 0.3);
-        }
+                .login-card::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 5px;
+                    background: linear-gradient(90deg, #00f2fe, #3b82f6, #00ffd5);
+                }
 
-        .toggle-pw-btn {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.4);
-            cursor: pointer;
-            padding: 4px;
-            font-size: 0.9rem;
-            transition: color 0.15s;
-        }
-        .toggle-pw-btn:hover { color: #fff; }
+            .logo-area {
+                text-align: center;
+                margin-bottom: 20px;
+            }
 
-        .btn-submit {
-            width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            border: none;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.25s;
-            box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
-            margin-top: 6px;
-        }
+            .shield-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.4), rgba(79, 172, 254, 0.3));
+                border: 2px solid rgba(255, 255, 255, 0.6);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.7rem;
+                color: #ffffff;
+                margin-bottom: 10px;
+                box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+            }
 
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-        }
+            .logo-area h3 {
+                font-size: 1.25rem;
+                font-weight: 800;
+                color: #ffffff;
+                margin-bottom: 4px;
+            }
 
-        .links-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 24px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
+            .logo-area p {
+                color: rgba(255, 255, 255, 0.85);
+                font-size: 0.8rem;
+            }
 
-        .back-link {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.82rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: color 0.2s;
-        }
-        .back-link:hover { color: #8b5cf6; }
+            .form-label-custom {
+                color: rgba(255, 255, 255, 0.95);
+                font-size: 0.82rem;
+                font-weight: 600;
+                margin-bottom: 5px;
+                display: block;
+            }
 
-        .alert-custom {
-            background: rgba(239, 68, 68, 0.14);
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            color: #fca5a5;
-            border-radius: 12px;
-            padding: 11px 14px;
-            margin-bottom: 20px;
-            font-size: 0.86rem;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-        }
+            .input-group-custom {
+                position: relative;
+                margin-bottom: 16px;
+            }
+
+            .input-icon {
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 0.9rem;
+            }
+
+            .form-control-custom {
+                width: 100%;
+                background: rgba(255, 255, 255, 0.15);
+                border: 1.5px solid rgba(255, 255, 255, 0.4);
+                border-radius: 12px;
+                color: #fff;
+                padding: 10px 38px 10px 14px;
+                font-size: 0.88rem;
+                outline: none;
+                transition: all 0.3s ease;
+            }
+
+                .form-control-custom:focus {
+                    border-color: #00f2fe;
+                    background: rgba(255, 255, 255, 0.25);
+                    box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+                }
+
+                .form-control-custom::placeholder {
+                    color: rgba(255, 255, 255, 0.55);
+                }
+
+            .toggle-pw-btn {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: rgba(255, 255, 255, 0.7);
+                cursor: pointer;
+                padding: 4px;
+                font-size: 0.85rem;
+            }
+
+            .btn-submit {
+                width: 100%;
+                padding: 11px;
+                background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+                border: 1.5px solid rgba(255,255,255,0.4);
+                border-radius: 12px;
+                color: #fff;
+                font-size: 0.92rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.25s;
+                box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+                margin-top: 4px;
+            }
+
+                .btn-submit:active, .btn-submit:hover {
+                    transform: scale(0.98);
+                    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+                }
+
+            .links-area {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 18px;
+                padding-top: 14px;
+                border-top: 1.5px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .back-link {
+                color: rgba(255, 255, 255, 0.85);
+                font-size: 0.78rem;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-weight: 500;
+                background: rgba(255, 255, 255, 0.08);
+                padding: 5px 10px;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            .alert-custom {
+                background: rgba(239, 68, 68, 0.25);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                color: #ffd6d6;
+                border-radius: 10px;
+                padding: 9px 11px;
+                margin-bottom: 15px;
+                font-size: 0.8rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="logo-area">
-            <div class="shield-icon">
-                <i class="fas fa-user-shield"></i>
+
+    <div class="wrapper">
+        <!-- الـ Widgets العلوية: الطقس والموسيقى -->
+        <div class="top-widgets">
+            <!-- ويدجت الطقس -->
+            <div class="glass-widget">
+                <div class="widget-header">
+                    <span><i class="fas fa-sun text-warning me-1"></i> الطقس</span>
+                    <span>24°</span>
+                </div>
+                <div class="weather-content">
+                    <span class="weather-temp">مشمس</span>
+                    <i class="fas fa-cloud-sun fa-lg text-info"></i>
+                </div>
             </div>
-            <h3>تسجيل دخول الأدمن</h3>
-            <p>لوحة التحكم وإدارة حضور الماتش</p>
+
+            <!-- ويدجت المشغل الموسيقي -->
+            <div class="glass-widget">
+                <div class="widget-header">
+                    <span><i class="fas fa-music me-1"></i> المشغل</span>
+                    <i class="fas fa-compact-disc fa-spin"></i>
+                </div>
+                <div class="music-content">
+                    <div class="music-title">Ocean Breeze</div>
+                    <div class="music-controls">
+                        <i class="fas fa-step-backward"></i>
+                        <i class="fas fa-play-circle fa-lg"></i>
+                        <i class="fas fa-step-forward"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        @if (ViewBag.Error != null)
-        {
-            <div class="alert-custom">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>@ViewBag.Error</span>
-            </div>
-        }
-
-        <form asp-action="Login" method="post">
-            @Html.AntiForgeryToken()
-
-            <label class="form-label-custom">اسم المستخدم</label>
-            <div class="input-group-custom">
-                <i class="fas fa-user input-icon"></i>
-                <input type="text" name="username" class="form-control-custom" placeholder="اسم مستخدم الأدمن..." required autocomplete="username" autofocus />
+        <!-- كارت تسجيل الدخول -->
+        <div class="login-card">
+            <div class="logo-area">
+                <div class="shield-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3>تسجيل دخول الأدمن</h3>
+                <p>لوحة التحكم وإدارة حضور الماتش</p>
             </div>
 
-            <label class="form-label-custom">كلمة السر</label>
-            <div class="input-group-custom">
-                <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="adminPassword" name="password" class="form-control-custom" style="padding-left: 42px;" placeholder="كلمة سر الأدمن..." required autocomplete="current-password" />
-                <button type="button" class="toggle-pw-btn" onclick="togglePassword()" title="إظهار/إخفاء">
-                    <i class="fas fa-eye" id="pwToggleIcon"></i>
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert-custom">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>@ViewBag.Error</span>
+                </div>
+            }
+
+            <form asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+
+                <label class="form-label-custom">اسم المستخدم</label>
+                <div class="input-group-custom">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" name="username" class="form-control-custom" placeholder="اسم مستخدم الأدمن..." required autocomplete="username" autofocus />
+                </div>
+
+                <label class="form-label-custom">كلمة السر</label>
+                <div class="input-group-custom">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="adminPassword" name="password" class="form-control-custom" placeholder="كلمة سر الأدمن..." required autocomplete="current-password" />
+                    <button type="button" class="toggle-pw-btn" onclick="togglePassword()" title="إظهار/إخفاء">
+                        <i class="fas fa-eye" id="pwToggleIcon"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-sign-in-alt me-2"></i> دخول للوحة الأدمن
                 </button>
+            </form>
+
+            <div class="links-area">
+                <a href="/" class="back-link">
+                    <i class="fas fa-arrow-right"></i> الرئيسية
+                </a>
+                <a href="/Home/Room" class="back-link">
+                    <i class="fas fa-comments"></i> غرفة الماتش
+                </a>
             </div>
-
-            <button type="submit" class="btn-submit">
-                <i class="fas fa-sign-in-alt me-2"></i> دخول للوحة الأدمن
-            </button>
-        </form>
-
-        <div class="links-area">
-            <a href="/" class="back-link">
-                <i class="fas fa-arrow-right"></i> الرئيسية
-            </a>
-            <a href="/Home/Room" class="back-link">
-                <i class="fas fa-comments"></i> غرفة الماتش
-            </a>
         </div>
     </div>
 
     <script>
-        function togglePassword() {
-            const input = document.getElementById("adminPassword");
-            const icon = document.getElementById("pwToggleIcon");
-            if (input.type === "password") {
-                input.type = "text";
-                icon.className = "fas fa-eye-slash";
-            } else {
-                input.type = "password";
-                icon.className = "fas fa-eye";
+            function togglePassword() {
+                const input = document.getElementById("adminPassword");
+                const icon = document.getElementById("pwToggleIcon");
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.className = "fas fa-eye-slash";
+                } else {
+                    input.type = "password";
+                    icon.className = "fas fa-eye";
+                }
             }
-        }
     </script>
 </body>
 </html>
