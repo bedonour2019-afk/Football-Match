@@ -964,12 +964,87 @@ namespace Football_Match.Controllers
             if (HttpContext.Session.GetString("IsAdmin") != "true")
                 return RedirectToAction("Login");
 
+            var currentAttendanceId = GetOrRestoreAttendanceId();
+            Attendance? currentAttendee = null;
+            if (currentAttendanceId != null)
+            {
+                currentAttendee = await _context.Attendances.FindAsync(currentAttendanceId.Value);
+            }
+            ViewBag.CurrentAttendee = currentAttendee;
+
             var responses = await _context.Attendances
                 .AsNoTracking()
                 .OrderByDescending(a => a.UpdatedAt ?? a.RespondedAt)
                 .ToListAsync();
 
             return View(responses);
+        }
+
+        // الخروج من وضع الأدمن والرجوع للحساب العادي
+        public IActionResult ExitAdmin()
+        {
+            HttpContext.Session.Remove("IsAdmin");
+            var attendanceId = GetOrRestoreAttendanceId();
+            if (attendanceId != null)
+            {
+                TempData["SuccessMessage"] = "تمت العودة لحسابك الشخصي بنجاح 👋";
+                return RedirectToAction("Room");
+            }
+            return RedirectToAction("Index");
+        }
+
+        // دخول الأدمن بحساب عضو معين
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SwitchToUser(int id)
+        {
+            if (HttpContext.Session.GetString("IsAdmin") != "true")
+                return RedirectToAction("Login");
+
+            var target = await _context.Attendances.FindAsync(id);
+            if (target != null)
+            {
+                HttpContext.Session.SetInt32("AttendanceId", target.Id);
+                HttpContext.Session.SetString("UserName", target.FriendName);
+                SetAttendanceCookie(target.Id);
+                HttpContext.Session.Remove("IsAdmin");
+                TempData["SuccessMessage"] = $"تم الدخول بحساب {target.FriendName} بنجاح! 👋";
+                return RedirectToAction("Room");
+            }
+
+            return RedirectToAction("Admin");
+        }
+
+        // إعادة تعيين إجابات جميع الأعضاء لبدء ماتش جديد (Reset)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetAllStatuses()
+        {
+            if (HttpContext.Session.GetString("IsAdmin") != "true")
+                return RedirectToAction("Login");
+
+            var attendances = await _context.Attendances.ToListAsync();
+            foreach (var item in attendances)
+            {
+                item.Status = "لم يحدد";
+                item.Note = null;
+                item.TeamNumber = null;
+                item.PlayerPosition = null;
+                item.UpdatedAt = DateTime.Now;
+            }
+
+            var settings = await _context.MatchSettings.FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                settings.WinnerTeamNumber = null;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _ = _push.SendToAllAsync("ماتش جديد! ⚽", "تم فتح باب تسجيل الحضور للماتش القادم، ادخل حدد موقفك الآن!");
+
+            TempData["SuccessMessage"] = "تمت إعادة تعيين إجابات جميع الأعضاء بنجاح! جاهزون للماتش الجديد 🚀";
+            return RedirectToAction("Admin");
         }
 
         // 8. حذف (Admin)
@@ -1017,15 +1092,16 @@ namespace Football_Match.Controllers
             return RedirectToAction("Admin");
         }
 
-        // 8.6 تعديل اسم/صورة أي شخص (Admin)
+        // 8.6 تعديل اسم/صورة/كلمة سر أي شخص (Admin)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateAttendeeAdmin(int id, string newName, IFormFile? profilePhoto)
+        public async Task<IActionResult> UpdateAttendeeAdmin(int id, string newName, string? newPassword, IFormFile? profilePhoto)
         {
             if (HttpContext.Session.GetString("IsAdmin") != "true")
                 return RedirectToAction("Login");
 
             newName = (newName ?? "").Trim();
+            newPassword = newPassword?.Trim();
 
             var target = await _context.Attendances.FindAsync(id);
             if (target != null)
@@ -1033,11 +1109,15 @@ namespace Football_Match.Controllers
                 if (!string.IsNullOrEmpty(newName))
                     target.FriendName = newName;
 
+                if (!string.IsNullOrEmpty(newPassword))
+                    target.Password = newPassword;
+
                 if (profilePhoto != null && profilePhoto.Length > 0)
                     target.ProfilePicturePath = await SaveProfilePhoto(profilePhoto);
 
                 target.UpdatedAt = DateTime.Now;
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"تم حفظ تعديلات {target.FriendName} بنجاح!";
             }
 
             return RedirectToAction("Admin");
@@ -1083,7 +1163,7 @@ namespace Football_Match.Controllers
 
         // 11. تغيير الموقف بضغطة واحدة
         [HttpPost]
-        public async Task<IActionResult> QuickStatus(string status)
+        public async Task<IActionResult> QuickStatus(string status, string? note = null)
         {
             var attendanceId = GetOrRestoreAttendanceId();
             if (attendanceId == null)
@@ -1099,13 +1179,15 @@ namespace Football_Match.Controllers
 
             var oldStatus = attendance.Status;
             attendance.Status = status;
+            if (note != null)
+                attendance.Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
             attendance.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
             if (oldStatus != status)
                 _ = _push.SendToAllAsync("تحديث الموقف 🔄", $"{attendance.FriendName} غيّر موقفه إلى: {status}", excludeAttendanceId: attendance.Id);
 
-            return Json(new { success = true, status = attendance.Status });
+            return Json(new { success = true, status = attendance.Status, note = attendance.Note });
         }
 
         // 10. Error page

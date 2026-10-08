@@ -454,7 +454,18 @@
                 <span class="winner-pill">🏆 فاز الفريق @(winnerTeam == 1 ? "الأول" : "الثاني")</span>
             }
         </div>
-        <a href="/Home/Room" class="back-btn"><i class="fas fa-arrow-right"></i> العودة للغرفة</a>
+        <div style="display:flex;gap:8px;align-items:center;">
+            @if (isAdminUser)
+            {
+                <a href="/Home/ExitAdmin" class="back-btn" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#6ee7b7;" title="الرجوع لحسابي العادي">
+                    <i class="fas fa-user-check"></i> <span class="d-none d-sm-inline">الرجوع لحسابي</span>
+                </a>
+                <a href="/Home/Admin" class="back-btn" style="background:rgba(139,92,246,0.18);border-color:rgba(139,92,246,0.4);color:#c4b5fd;" title="لوحة الأدمن">
+                    <i class="fas fa-cog"></i> <span class="d-none d-sm-inline">الأدمن</span>
+                </a>
+            }
+            <a href="/Home/Room" class="back-btn"><i class="fas fa-arrow-right"></i> <span class="d-none d-sm-inline">العودة للغرفة</span></a>
+        </div>
     </div>
 
     <div class="container-custom">

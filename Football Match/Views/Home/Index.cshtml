@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
 }
 
@@ -277,7 +277,12 @@
 
             <div class="mb-3">
                 <label class="form-label-custom">🔒 كلمة السر</label>
-                <input type="password" name="Password" class="form-control-custom" placeholder="اختار كلمة سر لحسابك..." required minlength="4" autocomplete="new-password" />
+                <div style="position:relative;">
+                    <input type="password" id="userPasswordInput" name="Password" class="form-control-custom" style="padding-left:44px;" placeholder="اختار كلمة سر لحسابك..." required minlength="4" autocomplete="new-password" />
+                    <button type="button" onclick="toggleIndexPassword()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.45);cursor:pointer;font-size:0.95rem;padding:4px;" title="إظهار/إخفاء">
+                        <i class="fas fa-eye" id="indexPwIcon"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="mb-3">
@@ -353,6 +358,25 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+        function toggleIndexPassword() {
+            const input = document.getElementById("userPasswordInput");
+            const icon = document.getElementById("indexPwIcon");
+            if (input.type === "password") {
+                input.type = "text";
+                icon.className = "fas fa-eye-slash";
+            } else {
+                input.type = "password";
+                icon.className = "fas fa-eye";
+            }
+        }
+
+        document.querySelector('form').addEventListener('submit', function() {
+            const btn = this.querySelector('.btn-submit');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري التأكيد...';
+                btn.style.opacity = '0.75';
+            }
+        });
     </script>
 </body>
 </html>

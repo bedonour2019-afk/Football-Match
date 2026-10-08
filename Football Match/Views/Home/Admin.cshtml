@@ -1,9 +1,11 @@
-﻿@model IEnumerable<Football_Match.Models.Attendance>
+@model IEnumerable<Football_Match.Models.Attendance>
 @{
     Layout = null;
+    var currentAttendee = ViewBag.CurrentAttendee as Football_Match.Models.Attendance;
     var goingCount = Model.Count(m => m.Status == "جاي أكيد");
     var notGoingCount = Model.Count(m => m.Status == "مش جاي");
     var maybeCount = Model.Count(m => m.Status == "احتمال أجي");
+    var pendingCount = Model.Count(m => string.IsNullOrEmpty(m.Status) || m.Status == "لم يحدد");
 }
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" data-bs-theme="dark">
@@ -11,105 +13,792 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <title>لوحة الأدمن</title>
+    <title>لوحة الأدمن - إدارة الماتش</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        body { background: #0d0d1a; color: #fff; font-family: "Segoe UI", Tahoma, sans-serif; min-height: 100vh; padding: 24px; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-        .admin-header h2 { font-size: 1.4rem; font-weight: 800; }
-        .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; text-align: center; }
-        .stat-card h4 { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .stat-card h2 { font-size: 2.5rem; font-weight: 800; margin: 0; }
-        .table-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; overflow: hidden; }
-        .table { color: #fff; margin: 0; }
-        .table td { background-color: transparent !important; color: #fff !important; box-shadow: none !important; }
-        .table th { background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.07); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.5) !important; padding: 14px 16px; }
-        .table td { border-color: rgba(255,255,255,0.05); padding: 12px 16px; vertical-align: middle; }
-        .table tbody tr:hover { background: rgba(255,255,255,0.03); }
-        .av-sm { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-        .av-sm-ph { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 700; }
-        .badge-going { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; }
-        .badge-notgoing { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; }
-        .badge-maybe { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; }
-        .del-form-btn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; color: #ef4444; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .del-form-btn:hover { background: rgba(239,68,68,0.2); }
-        .logout-btn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; color: #ef4444; padding: 8px 18px; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; }
-        .logout-btn:hover { color: #fff; background: #ef4444; }
-        .room-link { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3); border-radius: 10px; color: #a855f7; padding: 8px 18px; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; }
-        .room-link:hover { color: #fff; background: #7c3aed; }
-        .note-text { color: rgba(255,255,255,0.4); font-size: 0.82rem; }
-        .mvp-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: rgba(255,255,255,0.5); padding: 6px 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; margin-left: 6px; }
-        .mvp-btn:hover { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.4); }
-        .mvp-btn.active { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1a1200; border-color: #f59e0b; font-weight: 700; }
-        .mvp-row { background: linear-gradient(90deg, rgba(245,158,11,0.08), transparent) !important; }
-        .mvp-name-gold { color: #f59e0b !important; font-weight: 800 !important; }
-        .edit-btn { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 8px; color: #a855f7; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .edit-btn:hover { background: rgba(124,58,237,0.2); color: #fff; }
-        .edit-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
-        .edit-modal-overlay.show { display: flex; }
-        .edit-modal { background: #14141f; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 24px; width: 100%; max-width: 380px; }
-        .edit-modal h3 { margin: 0 0 18px; font-size: 1.05rem; text-align: center; }
-        .edit-modal label { font-size: 0.8rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px; }
-        .edit-modal input[type="text"] { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; padding: 9px 12px; margin-bottom: 16px; font-size: 0.92rem; }
-        .edit-photo-preview { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(124,58,237,0.5); display: block; margin: 0 auto 6px; }
-        .edit-photo-ph { width: 70px; height: 70px; border-radius: 50%; background: rgba(124,58,237,0.2); color: #a855f7; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; margin: 0 auto 6px; }
-        .edit-modal-save { width: 100%; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; border-radius: 10px; color: #fff; padding: 11px; font-weight: 700; font-size: 0.92rem; cursor: pointer; margin-bottom: 10px; }
-        .edit-modal-delete { width: 100%; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; color: #ef4444; padding: 10px; font-weight: 600; font-size: 0.88rem; cursor: pointer; margin-bottom: 10px; }
-        .edit-modal-delete:hover { background: #ef4444; color: #fff; }
-        .edit-modal-cancel { width: 100%; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 0.85rem; cursor: pointer; }
+        :root {
+            --bg-main: #0c0a1a;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #090714 0%, #110d29 50%, #0d0a1d 100%);
+            color: #f1f5f9;
+            font-family: "Segoe UI", Tahoma, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 20px 24px 60px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 18px 24px;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-title-box h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title-box .meta-info {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.82rem;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-action-custom {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .btn-action-custom:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-return-user {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        }
+        .btn-return-user:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.14);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+        .btn-reset:hover {
+            background: #ef4444;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-room {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .btn-room:hover {
+            background: #8b5cf6;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(8px);
+            transition: all 0.25s;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .stat-info h4 {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 6px;
+        }
+        .stat-info .stat-num {
+            font-size: 2.1rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1;
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+        }
+
+        .stat-going { border-color: rgba(34, 197, 94, 0.25); }
+        .stat-going .stat-num { color: #22c55e; }
+        .stat-going .stat-icon { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+        .stat-notgoing { border-color: rgba(239, 68, 68, 0.25); }
+        .stat-notgoing .stat-num { color: #ef4444; }
+        .stat-notgoing .stat-icon { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .stat-maybe { border-color: rgba(245, 158, 11, 0.25); }
+        .stat-maybe .stat-num { color: #f59e0b; }
+        .stat-maybe .stat-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+        .stat-pending { border-color: rgba(148, 163, 184, 0.25); }
+        .stat-pending .stat-num { color: #94a3b8; }
+        .stat-pending .stat-icon { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+        /* Toolbar */
+        .toolbar-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 40px 10px 16px;
+            color: #fff;
+            font-size: 0.88rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.08);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .filter-chip.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .table {
+            color: #fff;
+            margin: 0;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255, 255, 255, 0.6) !important;
+            padding: 16px 16px;
+            vertical-align: middle;
+        }
+
+        .table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 13px 16px;
+            vertical-align: middle;
+            background: transparent !important;
+            color: #f1f5f9 !important;
+            font-size: 0.88rem;
+        }
+
+        .table tbody tr {
+            transition: background 0.15s;
+        }
+        .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.035) !important;
+        }
+
+        .av-sm {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+        }
+        .av-sm-ph {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 700;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border: 1.5px solid rgba(139, 92, 246, 0.3);
+        }
+
+        /* Password Pill */
+        .password-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-family: Consolas, monospace;
+            font-size: 0.85rem;
+            direction: ltr;
+        }
+
+        .password-val {
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #38bdf8;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pw-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.45);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 6px;
+            transition: all 0.15s;
+            font-size: 0.85rem;
+        }
+        .pw-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Status Badges */
+        .badge-going {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-notgoing {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-maybe {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-pending {
+            background: rgba(148, 163, 184, 0.15);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* MVP Styling */
+        .mvp-row {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent) !important;
+        }
+        .mvp-name-gold {
+            color: #fbbf24 !important;
+            font-weight: 800 !important;
+        }
+        .mvp-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mvp-btn:hover {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        .mvp-btn.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #1a1200;
+            border-color: #f59e0b;
+            font-weight: 800;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .edit-btn {
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            color: #c4b5fd;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .edit-btn:hover {
+            background: rgba(139, 92, 246, 0.25);
+            color: #fff;
+        }
+
+        .switch-user-btn {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            color: #6ee7b7;
+            padding: 6px 11px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .switch-user-btn:hover {
+            background: #10b981;
+            color: #fff;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal-box-custom {
+            background: #121024;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 28px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            animation: modalScale 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @@keyframes modalScale {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header-custom {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .modal-header-custom h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 0 0 6px;
+            color: #fff;
+        }
+        .modal-header-custom p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.84rem;
+            margin: 0;
+        }
+
+        .form-label-custom {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.65);
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .input-custom {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            padding: 11px 14px;
+            margin-bottom: 16px;
+            font-size: 0.92rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .input-custom:focus {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-modal-save {
+            width: 100%;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            padding: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .btn-modal-save:hover {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transform: translateY(-1px);
+        }
+
+        .btn-modal-danger {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            color: #fca5a5;
+            padding: 11px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .btn-modal-danger:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-modal-cancel {
+            width: 100%;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.86rem;
+            cursor: pointer;
+            padding: 6px;
+            transition: color 0.15s;
+        }
+        .btn-modal-cancel:hover { color: #fff; }
+
+        .edit-photo-preview {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+            display: block;
+            margin: 0 auto 6px;
+        }
+        .edit-photo-ph {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 6px;
+            border: 2px solid rgba(139, 92, 246, 0.35);
+        }
+
+        /* Toast Alert */
+        .toast-banner {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e1b4b;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @@keyframes toastPop {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Header -->
     <div class="admin-header">
-        <div>
-            <h2><i class="fas fa-chart-bar me-2" style="color:#a855f7;"></i>لوحة الأدمن</h2>
-            <div style="color:rgba(255,255,255,0.4);font-size:0.82rem;">@Model.Count() مسجّل إجمالاً</div>
+        <div class="header-title-box">
+            <h2>
+                <i class="fas fa-user-shield" style="color:var(--primary);"></i>
+                لوحة تحكم الأدمن
+            </h2>
+            <div class="meta-info">
+                إجمالي الأعضاء: <b>@Model.Count()</b>
+                @if (currentAttendee != null)
+                {
+                    <span> &nbsp;|&nbsp; أنت مسجل حالياً كـ: <b style="color:#6ee7b7;">@currentAttendee.FriendName</b></span>
+                }
+            </div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-            <a asp-action="Room" class="room-link"><i class="fas fa-users me-1"></i>الغرفة</a>
-            <a asp-action="Logout" class="logout-btn"><i class="fas fa-sign-out-alt me-1"></i>خروج</a>
+
+        <div class="header-actions">
+            <!-- الزر المطلوب: الرجوع للحساب العادي بأي وقت بدون الحاجة لتسجيل خروج كامل -->
+            <a asp-action="ExitAdmin" class="btn-action-custom btn-return-user" title="العودة لحسابك العادي فوراً بدون تسجيل خروج">
+                <i class="fas fa-arrow-right"></i>
+                @(currentAttendee != null ? $"الرجوع لحسابي ({currentAttendee.FriendName})" : "الرجوع لحسابي العادي")
+            </a>
+
+            <!-- الزر المطلوب: Reset تصفير إجابات الأعضاء للماتش الجديد -->
+            <button type="button" class="btn-action-custom btn-reset" onclick="openResetModal()">
+                <i class="fas fa-redo-alt"></i>
+                إعادة تعيين الماتش (Reset)
+            </button>
+
+            <!-- زر الغرفة -->
+            <a asp-action="Room" class="btn-action-custom btn-room">
+                <i class="fas fa-comments"></i>
+                الغرفة
+            </a>
+
+            <!-- خروج كامل -->
+            <a asp-action="Logout" class="btn-action-custom btn-logout" onclick="return confirm('هل تريد تسجيل خروج كامل ومسح بيانات الجلسة؟')">
+                <i class="fas fa-sign-out-alt"></i>
+                خروج كامل
+            </a>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="stat-card" style="border-color:rgba(34,197,94,0.2);">
-                <h4 style="color:#22c55e;">جايين أكيد</h4>
-                <h2 style="color:#22c55e;">@goingCount</h2>
-            </div>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:#86efac;border-radius:14px;font-size:0.9rem;" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card" style="border-color:rgba(239,68,68,0.2);">
-                <h4 style="color:#ef4444;">اعتذروا</h4>
-                <h2 style="color:#ef4444;">@notGoingCount</h2>
-            </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:14px;font-size:0.9rem;" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card" style="border-color:rgba(245,158,11,0.2);">
-                <h4 style="color:#f59e0b;">احتمال</h4>
-                <h2 style="color:#f59e0b;">@maybeCount</h2>
+    }
+
+    <!-- 4 Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-going">
+            <div class="stat-info">
+                <h4>جايين أكيد</h4>
+                <div class="stat-num">@goingCount</div>
             </div>
+            <div class="stat-icon"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div class="stat-card stat-maybe">
+            <div class="stat-info">
+                <h4>احتمال</h4>
+                <div class="stat-num">@maybeCount</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-question"></i></div>
+        </div>
+
+        <div class="stat-card stat-notgoing">
+            <div class="stat-info">
+                <h4>اعتذروا</h4>
+                <div class="stat-num">@notGoingCount</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-times"></i></div>
+        </div>
+
+        <div class="stat-card stat-pending">
+            <div class="stat-info">
+                <h4>في انتظار الرد</h4>
+                <div class="stat-num">@pendingCount</div>
+            </div>
+            <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
         </div>
     </div>
 
-    <div class="table-card">
-        <table class="table table-hover">
+    <!-- Toolbar: Search & Filter -->
+    <div class="toolbar-box">
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="tableSearch" class="search-input" placeholder="ابحث بالاسم، رقم الموبايل، أو كلمة السر..." onkeyup="filterTable()" />
+        </div>
+
+        <div class="filter-chips">
+            <div class="filter-chip active" onclick="setStatusFilter('all', this)">الكل (@Model.Count())</div>
+            <div class="filter-chip" onclick="setStatusFilter('جاي أكيد', this)">جايين (@goingCount)</div>
+            <div class="filter-chip" onclick="setStatusFilter('احتمال أجي', this)">احتمال (@maybeCount)</div>
+            <div class="filter-chip" onclick="setStatusFilter('مش جاي', this)">اعتذروا (@notGoingCount)</div>
+            <div class="filter-chip" onclick="setStatusFilter('لم يحدد', this)">في الانتظار (@pendingCount)</div>
+        </div>
+    </div>
+
+    <!-- Attendees Table -->
+    <div class="table-card table-responsive">
+        <table class="table" id="attendeesTable">
             <thead>
                 <tr>
-                    <th>الصورة</th>
+                    <th style="width: 55px;">الصورة</th>
                     <th>الاسم</th>
                     <th>رقم الموبايل</th>
-                    <th>الحالة</th>
+                    <th><i class="fas fa-key me-1" style="color:var(--primary);"></i> كلمة السر</th>
+                    <th>موقف الحضور</th>
                     <th>ملاحظات</th>
-                    <th>التاريخ</th>
-                    <th class="text-center">إجراء</th>
+                    <th>آخر تحديث</th>
+                    <th class="text-center" style="width: 220px;">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr class="@(item.IsMVP ? "mvp-row" : "")">
+                    <tr class="attendee-row @(item.IsMVP ? "mvp-row" : "")"
+                        data-name="@item.FriendName"
+                        data-phone="@item.PhoneNumber"
+                        data-password="@(item.Password ?? "")"
+                        data-status="@(string.IsNullOrEmpty(item.Status) ? "لم يحدد" : item.Status)">
                         <td>
                             @if (!string.IsNullOrEmpty(item.ProfilePicturePath))
                             {
@@ -117,45 +806,99 @@
                             }
                             else
                             {
-                                <div class="av-sm-ph" style="background:rgba(124,58,237,0.2);color:#a855f7;">
-                                    @(item.FriendName.Length > 0 ? item.FriendName.Substring(0,1).ToUpper() : "?")
+                                <div class="av-sm-ph">
+                                    @(item.FriendName.Length > 0 ? item.FriendName.Substring(0, 1).ToUpper() : "?")
                                 </div>
                             }
                         </td>
-                        <td style="font-weight:600;" class="@(item.IsMVP ? "mvp-name-gold" : "")">
+                        <td style="font-weight: 700;" class="@(item.IsMVP ? "mvp-name-gold" : "")">
                             @if (item.IsMVP)
                             {
-                                <span>👑</span>
+                                <span title="نجم المباراة" class="me-1">👑</span>
                             }
                             @item.FriendName
+                            @if (!string.IsNullOrEmpty(item.Nickname))
+                            {
+                                <div style="font-size: 0.76rem; color: rgba(255,255,255,0.45); font-weight: normal;">(@item.Nickname)</div>
+                            }
                         </td>
-                        <td style="color:rgba(255,255,255,0.5);font-size:0.87rem;">@item.PhoneNumber</td>
+                        <td style="color: rgba(255,255,255,0.7); font-family: Consolas, monospace; direction: ltr; text-align: right;">
+                            @item.PhoneNumber
+                        </td>
+                        <td>
+                            <!-- عرض كلمة السر للأدمن مع إمكانية الإظهار/الإخفاء والنسخ السريع -->
+                            @if (!string.IsNullOrEmpty(item.Password))
+                            {
+                                <div class="password-pill">
+                                    <span class="password-val" id="pw-text-@item.Id" data-original="@item.Password">••••••</span>
+                                    <button type="button" class="pw-btn" onclick="togglePasswordVisibility('@item.Id')" title="إظهار/إخفاء كلمة السر">
+                                        <i class="fas fa-eye" id="pw-icon-@item.Id"></i>
+                                    </button>
+                                    <button type="button" class="pw-btn" onclick="copyPassword('@item.Password')" title="نسخ كلمة السر">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="badge-pending" style="font-size:0.75rem;">غير محددة</span>
+                            }
+                        </td>
                         <td>
                             @if (item.Status == "جاي أكيد")
-                            { <span class="badge-going">✅ جاي أكيد</span> }
+                            {
+                                <span class="badge-going"><i class="fas fa-check"></i> جاي أكيد</span>
+                            }
                             else if (item.Status == "مش جاي")
-                            { <span class="badge-notgoing">❌ مش جاي</span> }
+                            {
+                                <span class="badge-notgoing"><i class="fas fa-times"></i> مش جاي</span>
+                            }
+                            else if (item.Status == "احتمال أجي")
+                            {
+                                <span class="badge-maybe"><i class="fas fa-question"></i> احتمال أجي</span>
+                            }
                             else
-                            { <span class="badge-maybe">❓ احتمال أجي</span> }
+                            {
+                                <span class="badge-pending"><i class="fas fa-clock"></i> في انتظار الرد</span>
+                            }
                         </td>
-                        <td class="note-text">@(string.IsNullOrEmpty(item.Note) ? "-" : item.Note)</td>
-                        <td style="color:rgba(255,255,255,0.4);font-size:0.8rem;">
-                            @((item.UpdatedAt ?? item.RespondedAt).ToString("g"))
+                        <td style="color: rgba(255,255,255,0.5); font-size: 0.82rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            @(string.IsNullOrEmpty(item.Note) ? "-" : item.Note)
+                        </td>
+                        <td style="color: rgba(255,255,255,0.4); font-size: 0.78rem;">
+                            @((item.UpdatedAt ?? item.RespondedAt).ToString("dd/MM HH:mm"))
                         </td>
                         <td class="text-center">
-                            <form asp-action="SetMVP" method="post" style="display:inline;">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="mvp-btn @(item.IsMVP ? "active" : "")" title="نجم المباراة">
-                                    👑
+                            <div style="display: inline-flex; align-items: center; gap: 6px;">
+                                <!-- MVP toggle -->
+                                <form asp-action="SetMVP" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="mvp-btn @(item.IsMVP ? "active" : "")" title="تعيين/إلغاء نجم المباراة">
+                                        👑
+                                    </button>
+                                </form>
+
+                                <!-- Edit Attendee & Password -->
+                                <button type="button" class="edit-btn"
+                                        data-id="@item.Id"
+                                        data-name="@item.FriendName"
+                                        data-password="@(item.Password ?? "")"
+                                        data-photo="@(item.ProfilePicturePath ?? "")"
+                                        onclick="openEditModal(this)"
+                                        title="تعديل البيانات أو كلمة السر">
+                                    <i class="fas fa-edit me-1"></i>تعديل
                                 </button>
-                            </form>
-                            <button type="button" class="edit-btn"
-                                    data-id="@item.Id"
-                                    data-name="@item.FriendName"
-                                    data-photo="@(item.ProfilePicturePath ?? "")"
-                                    onclick="openEditModal(this)">
-                                <i class="fas fa-edit me-1"></i>تعديل
-                            </button>
+
+                                <!-- Switch to user account directly -->
+                                <form asp-action="SwitchToUser" method="post" style="display:inline; margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="switch-user-btn" title="تسجيل الدخول فوراً بهذا الحساب">
+                                        <i class="fas fa-sign-in-alt me-1"></i>دخول بحسابه
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -163,49 +906,149 @@
         </table>
     </div>
 
-    <!-- Edit Attendee Modal -->
-    <div class="edit-modal-overlay" id="editModalOverlay" onclick="if(event.target===this) closeEditModal()">
-        <div class="edit-modal">
-            <h3>تعديل بيانات الشخص</h3>
+    <!-- Edit Attendee Modal (Name, Photo, and Password) -->
+    <div class="modal-overlay" id="editModalOverlay" onclick="if(event.target===this) closeEditModal()">
+        <div class="modal-box-custom">
+            <div class="modal-header-custom">
+                <h3>تعديل بيانات العضو</h3>
+                <p>تعديل الاسم، كلمة السر، أو الصورة الشخصية</p>
+            </div>
 
             <form id="editForm" asp-action="UpdateAttendeeAdmin" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" id="editId" />
 
-                <label for="editPhotoInput" style="cursor:pointer;text-align:center;">
+                <label for="editPhotoInput" style="cursor:pointer; text-align:center; display:block;">
                     <img id="editPhotoPreview" class="edit-photo-preview" src="" style="display:none;" />
                     <div id="editPhotoPh" class="edit-photo-ph">?</div>
-                    <div style="color:rgba(255,255,255,0.4);font-size:0.72rem;margin-bottom:14px;">دوس لتغيير الصورة</div>
+                    <div style="color: rgba(255,255,255,0.45); font-size: 0.74rem; margin-bottom: 14px;">اضغط هنا لتغيير الصورة</div>
                 </label>
                 <input type="file" id="editPhotoInput" name="profilePhoto" accept="image/*" style="display:none;" onchange="previewEditPhoto(this)" />
 
-                <label>الاسم</label>
-                <input type="text" name="newName" id="editNameInput" maxlength="100" required />
+                <label class="form-label-custom">اسم العضو</label>
+                <input type="text" name="newName" id="editNameInput" class="input-custom" maxlength="100" required />
 
-                <button type="submit" class="edit-modal-save"><i class="fas fa-check me-1"></i>حفظ التعديلات</button>
+                <label class="form-label-custom">كلمة السر (يمكنك تغييرها أو عرضها)</label>
+                <input type="text" name="newPassword" id="editPasswordInput" class="input-custom" placeholder="كلمة السر..." />
+
+                <button type="submit" class="btn-modal-save">
+                    <i class="fas fa-check me-1"></i> حفظ التعديلات
+                </button>
             </form>
 
-            <form id="deleteForm" asp-action="Delete" method="post">
+            <form id="deleteForm" asp-action="Delete" method="post" style="margin: 0;">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" id="deleteId" />
             </form>
-            <button type="button" class="edit-modal-delete" onclick="confirmDeleteFromModal()">
-                <i class="fas fa-trash me-1"></i>حذف هذا الشخص نهائيًا
+            <button type="button" class="btn-modal-danger" onclick="confirmDeleteFromModal()">
+                <i class="fas fa-trash me-1"></i> حذف هذا العضو نهائياً
             </button>
 
-            <button type="button" class="edit-modal-cancel" onclick="closeEditModal()">إلغاء</button>
+            <button type="button" class="btn-modal-cancel" onclick="closeEditModal()">إلغاء</button>
         </div>
     </div>
 
+    <!-- Reset Match Confirmation Modal -->
+    <div class="modal-overlay" id="resetModalOverlay" onclick="if(event.target===this) closeResetModal()">
+        <div class="modal-box-custom">
+            <div class="modal-header-custom">
+                <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 12px;">
+                    <i class="fas fa-redo-alt"></i>
+                </div>
+                <h3>إعادة تعيين الماتش الجديد؟</h3>
+                <p style="color: rgba(255,255,255,0.7); line-height: 1.6; margin-top: 8px;">
+                    هل أنت متأكد؟ سيتم <b>تصفير إجابات جميع الأعضاء</b> (جاي / مش جاي) وإلغاء ملاحظاتهم والفرق.
+                    <br /><br />
+                    بمجرد دخول أي عضو لحسابه، <b>ستظهر له القائمة فوراً</b> ليختار موقفه من الماتش الجديد! ⚽
+                </p>
+            </div>
+
+            <form asp-action="ResetAllStatuses" method="post" style="margin: 0;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-modal-danger" style="background:#ef4444; color:#fff; border:none; padding:12px;">
+                    <i class="fas fa-check me-1"></i> نعم، تصفير إجابات الجميع للماتش الجديد
+                </button>
+            </form>
+
+            <button type="button" class="btn-modal-cancel" style="margin-top:8px;" onclick="closeResetModal()">إلغاء والتراجع</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script>
+        // Password Visibility Toggle
+        function togglePasswordVisibility(id) {
+            const textEl = document.getElementById("pw-text-" + id);
+            const iconEl = document.getElementById("pw-icon-" + id);
+            const original = textEl.getAttribute("data-original");
+
+            if (textEl.textContent === "••••••") {
+                textEl.textContent = original;
+                iconEl.className = "fas fa-eye-slash";
+            } else {
+                textEl.textContent = "••••••";
+                iconEl.className = "fas fa-eye";
+            }
+        }
+
+        // Copy Password to Clipboard
+        function copyPassword(pw) {
+            if (!pw) return;
+            navigator.clipboard.writeText(pw).then(() => {
+                showToast("تم نسخ كلمة السر بنجاح! 📋");
+            }).catch(() => {
+                const temp = document.createElement("input");
+                temp.value = pw;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand("copy");
+                document.body.removeChild(temp);
+                showToast("تم نسخ كلمة السر بنجاح! 📋");
+            });
+        }
+
+        // Search & Filter
+        let currentStatusFilter = 'all';
+
+        function setStatusFilter(status, btn) {
+            currentStatusFilter = status;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            filterTable();
+        }
+
+        function filterTable() {
+            const query = (document.getElementById("tableSearch").value || "").toLowerCase().trim();
+            const rows = document.querySelectorAll("#attendeesTable tbody tr.attendee-row");
+
+            rows.forEach(row => {
+                const name = (row.getAttribute("data-name") || "").toLowerCase();
+                const phone = (row.getAttribute("data-phone") || "").toLowerCase();
+                const password = (row.getAttribute("data-password") || "").toLowerCase();
+                const status = row.getAttribute("data-status") || "";
+
+                const matchesQuery = !query || name.includes(query) || phone.includes(query) || password.includes(query);
+                const matchesStatus = currentStatusFilter === 'all' || status === currentStatusFilter;
+
+                if (matchesQuery && matchesStatus) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        // Edit Modal
         function openEditModal(btn) {
             const id = btn.dataset.id;
             const name = btn.dataset.name;
+            const password = btn.dataset.password || "";
             const photo = btn.dataset.photo;
 
             document.getElementById("editId").value = id;
             document.getElementById("deleteId").value = id;
             document.getElementById("editNameInput").value = name;
+            document.getElementById("editPasswordInput").value = password;
 
             const preview = document.getElementById("editPhotoPreview");
             const ph = document.getElementById("editPhotoPh");
@@ -240,9 +1083,34 @@
         }
 
         function confirmDeleteFromModal() {
-            if (confirm("هل أنت متأكد من مسح هذا الشخص نهائيًا؟")) {
+            if (confirm("هل أنت متأكد من حذف هذا العضو نهائياً؟ لن يمكن التراجع عن ذلك.")) {
                 document.getElementById("deleteForm").submit();
             }
+        }
+
+        // Reset Modal
+        function openResetModal() {
+            document.getElementById("resetModalOverlay").classList.add("show");
+        }
+        function closeResetModal() {
+            document.getElementById("resetModalOverlay").classList.remove("show");
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const oldToast = document.querySelector(".toast-banner");
+            if (oldToast) oldToast.remove();
+
+            const toast = document.createElement("div");
+            toast.className = "toast-banner";
+            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#22c55e;"></i> <span>${msg}</span>`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transition = "opacity 0.3s";
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         }
     </script>
 </body>

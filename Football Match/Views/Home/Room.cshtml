@@ -10,6 +10,8 @@
     var goingList = Model.Where(m => m.Status == "جاي أكيد").ToList();
     var notGoingList = Model.Where(m => m.Status == "مش جاي").ToList();
     var maybeList = Model.Where(m => m.Status == "احتمال أجي").ToList();
+    var pendingList = Model.Where(m => string.IsNullOrEmpty(m.Status) || m.Status == "لم يحدد").ToList();
+    bool needsToPickStatus = currentUser != null && (string.IsNullOrEmpty(currentUser.Status) || currentUser.Status == "لم يحدد");
     int targetPlayers = 12;
     int progressPercent = Math.Min((int)((goingList.Count / (double)targetPlayers) * 100), 100);
 }
@@ -724,11 +726,47 @@
             <div class="subtitle">@Model.Count() مسجّل &nbsp;|&nbsp; @goingList.Count جايين أكيد</div>
         </div>
         <div class="header-actions">
-            <button class="back-btn" onclick="openSettingsModal()" title="الإعدادات"><i class="fas fa-cog"></i></button>
+            @if (isAdminUser)
+            {
+                <a href="/Home/ExitAdmin" class="back-btn" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#6ee7b7;" title="الرجوع لحسابي العادي">
+                    <i class="fas fa-user-check"></i> <span class="d-none d-sm-inline">الرجوع لحسابي</span>
+                </a>
+                <a href="/Home/Admin" class="back-btn" style="background:rgba(139,92,246,0.18);border-color:rgba(139,92,246,0.4);color:#c4b5fd;" title="لوحة الأدمن">
+                    <i class="fas fa-cog"></i> <span class="d-none d-sm-inline">الأدمن</span>
+                </a>
+            }
+            <button class="back-btn" onclick="openSettingsModal()" title="الإعدادات"><i class="fas fa-sliders-h"></i></button>
             <a href="/Teams/Index" class="back-btn"><i class="fas fa-users"></i> <span class="d-none d-sm-inline">الفرق</span></a>
             <button class="mobile-toggle-btn" onclick="toggleMobileSidebar()"><i class="fas fa-users me-1"></i> الحضور</button>
         </div>
     </div>
+
+    @if (isAdminUser)
+    {
+        <div style="background:linear-gradient(90deg, rgba(139,92,246,0.2), rgba(59,130,246,0.15));border-bottom:1px solid rgba(139,92,246,0.3);padding:6px 16px;display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;">
+            <div style="display:flex;align-items:center;gap:6px;color:#c4b5fd;font-weight:700;">
+                <i class="fas fa-crown" style="color:#fbbf24;"></i>
+                <span>أنت الآن في وضع الأدمن</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+                <a href="/Home/Admin" style="background:#8b5cf6;color:#fff;border-radius:6px;padding:3px 9px;text-decoration:none;font-weight:600;font-size:0.75rem;"><i class="fas fa-shield-alt me-1"></i>لوحة التحكم</a>
+                <a href="/Home/ExitAdmin" style="background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.5);color:#6ee7b7;border-radius:6px;padding:3px 9px;text-decoration:none;font-weight:600;font-size:0.75rem;"><i class="fas fa-arrow-right me-1"></i>الرجوع لحسابي العادي</a>
+            </div>
+        </div>
+    }
+
+    @if (needsToPickStatus)
+    {
+        <div id="unpickedStatusBanner" style="background:linear-gradient(90deg, rgba(245,158,11,0.2), rgba(239,68,68,0.15));border-bottom:1px solid rgba(245,158,11,0.4);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;">
+            <div style="display:flex;align-items:center;gap:8px;color:#fde047;font-weight:700;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>تم بدء تسجيل ماتش جديد! لم تحدد موقفك بعد.</span>
+            </div>
+            <button onclick="openStatusModal()" style="background:#f59e0b;color:#181102;border:none;border-radius:8px;padding:4px 12px;font-weight:800;font-size:0.76rem;cursor:pointer;">
+                <i class="fas fa-check me-1"></i>حدد الآن
+            </button>
+        </div>
+    }
 
     <!-- Body -->
     <div class="room-body">
@@ -751,6 +789,10 @@
                     <span class="chip chip-green">✅ @goingList.Count جاي</span>
                     <span class="chip chip-yellow">❓ @maybeList.Count احتمال</span>
                     <span class="chip chip-red">❌ @notGoingList.Count مش جاي</span>
+                    @if (pendingList.Any())
+                    {
+                        <span class="chip" style="background:rgba(148,163,184,0.15);color:#cbd5e1;border:1px solid rgba(148,163,184,0.3);">⏳ @pendingList.Count لم يحدد</span>
+                    }
                 </div>
             </div>
             <div class="search-box">
@@ -760,7 +802,8 @@
                 @foreach (var group in new[] {
                     new { title = "جايين أكيد", list = goingList, bg = "rgba(34,197,94,0.2)", color = "#22c55e" },
                     new { title = "احتمال", list = maybeList, bg = "rgba(245,158,11,0.2)", color = "#f59e0b" },
-                    new { title = "مش جايين", list = notGoingList, bg = "rgba(239,68,68,0.15)", color = "#ef4444" }
+                    new { title = "مش جايين", list = notGoingList, bg = "rgba(239,68,68,0.15)", color = "#ef4444" },
+                    new { title = "في انتظار الرد ⏳", list = pendingList, bg = "rgba(148,163,184,0.15)", color = "#94a3b8" }
                 })
                 {
                     if (group.list.Any())
@@ -1134,13 +1177,26 @@
 
     <!-- Quick Status Modal -->
     <div class="modal-overlay" id="statusModalOverlay" onclick="if(event.target===this) closeStatusModal()">
-        <div class="modal-box">
-            <h3>غيّر موقفك من الماتش</h3>
-            <p>اختار موقفك الجديد</p>
-            <button class="modal-option-btn going" onclick="submitQuickStatus('جاي أكيد')">✅ جاي أكيد</button>
-            <button class="modal-option-btn maybe" onclick="submitQuickStatus('احتمال أجي')">❓ احتمال أجي</button>
-            <button class="modal-option-btn not-going" onclick="submitQuickStatus('مش جاي')">❌ مش جاي</button>
-            <button class="modal-cancel" onclick="closeStatusModal()">إلغاء</button>
+        <div class="modal-box" style="text-align:center;">
+            <div style="font-size: 2.2rem; margin-bottom: 6px;">⚽</div>
+            <h3>حدد موقفك من الماتش</h3>
+            <p style="margin-bottom:16px;">اختار موقفك وشاركه مع باقي الشباب في الغرفة</p>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+                <button class="modal-option-btn going" onclick="submitQuickStatus('جاي أكيد')">
+                    <i class="fas fa-check-circle me-1"></i> ✅ جاي أكيد (في التشكيل)
+                </button>
+                <button class="modal-option-btn maybe" onclick="submitQuickStatus('احتمال أجي')">
+                    <i class="fas fa-question-circle me-1"></i> ❓ احتمال أجي (حسب الظروف)
+                </button>
+                <button class="modal-option-btn not-going" onclick="submitQuickStatus('مش جاي')">
+                    <i class="fas fa-times-circle me-1"></i> ❌ مش جاي (اعتذار هذه المرة)
+                </button>
+            </div>
+            <div style="text-align:right;margin-bottom:14px;">
+                <label style="font-size:0.78rem;color:rgba(255,255,255,0.6);display:block;margin-bottom:5px;font-weight:600;">ملاحظة إضافية (اختياري)</label>
+                <input type="text" id="statusNoteInput" placeholder="مثلاً: هتأخر 10 دقايق، هجيب كورة..." style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:9px 12px;color:#fff;font-size:0.86rem;outline:none;" />
+            </div>
+            <button class="modal-cancel" onclick="closeStatusModal()">إغلاق</button>
         </div>
     </div>
 
@@ -1156,8 +1212,16 @@
                 <button class="modal-option-btn" onclick="closeSettingsModal(); openAccountModal();"><i class="fas fa-user-edit me-1"></i> تعديل الحساب</button>
                 <button class="modal-option-btn" onclick="closeSettingsModal(); window.location.href='/Home/Profile/@currentId';"><i class="fas fa-user me-1"></i> بروفايلي</button>
             }
-            <a href="/Home/Login" class="modal-option-btn" style="display:block;text-decoration:none;"><i class="fas fa-user-shield me-1"></i> تسجيل دخول الأدمن</a>
-            <a href="/Home/Logout" class="modal-option-btn not-going" style="display:block;text-decoration:none;" onclick="return confirm('هل تريد تسجيل الخروج؟');"><i class="fas fa-sign-out-alt me-1"></i> تسجيل الخروج</a>
+            @if (isAdminUser)
+            {
+                <a href="/Home/Admin" class="modal-option-btn" style="display:block;text-decoration:none;background:rgba(139,92,246,0.18);color:#c4b5fd;border-color:rgba(139,92,246,0.4);"><i class="fas fa-user-shield me-1"></i> فتح لوحة الأدمن</a>
+                <a href="/Home/ExitAdmin" class="modal-option-btn" style="display:block;text-decoration:none;background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:rgba(16,185,129,0.4);"><i class="fas fa-user-check me-1"></i> الرجوع لحسابي العادي</a>
+            }
+            else
+            {
+                <a href="/Home/Login" class="modal-option-btn" style="display:block;text-decoration:none;"><i class="fas fa-user-shield me-1"></i> تسجيل دخول الأدمن</a>
+            }
+            <a href="/Home/Logout" class="modal-option-btn not-going" style="display:block;text-decoration:none;" onclick="return confirm('هل تريد تسجيل الخروج بالكامل ومسح الجلسة؟');"><i class="fas fa-sign-out-alt me-1"></i> تسجيل الخروج بالكامل</a>
             <button class="modal-cancel" onclick="closeSettingsModal()">إلغاء</button>
         </div>
     </div>
@@ -2077,11 +2141,36 @@
 
         async function submitQuickStatus(status) {
             try {
-                const res = await fetch("/Home/QuickStatus", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "status=" + encodeURIComponent(status) });
+                const noteInput = document.getElementById("statusNoteInput");
+                const noteVal = noteInput ? noteInput.value.trim() : "";
+                const bodyParams = new URLSearchParams();
+                bodyParams.append("status", status);
+                if (noteVal) bodyParams.append("note", noteVal);
+
+                const res = await fetch("/Home/QuickStatus", { 
+                    method: "POST", 
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" }, 
+                    body: bodyParams.toString() 
+                });
                 const data = await res.json();
-                if (data.success) { closeStatusModal(); showToast("تم تحديث موقفك ✅"); setTimeout(() => location.reload(), 700); }
-                else alert(data.message || "حصلت مشكلة");
+                if (data.success) { 
+                    closeStatusModal(); 
+                    showToast("تم تسجيل موقفك بنجاح! ⚽"); 
+                    setTimeout(() => location.reload(), 600); 
+                }
+                else alert(data.message || "حصلت مشكلة أثناء تحديث موقفك");
             } catch (err) { alert("حصلت مشكلة في الاتصال بالسيرفر"); }
+        }
+
+        @if (needsToPickStatus)
+        {
+            <text>
+            window.addEventListener("DOMContentLoaded", function () {
+                setTimeout(function () {
+                    openStatusModal();
+                }, 350);
+            });
+            </text>
         }
 
         @if (TempData["SuccessMessage"] != null)

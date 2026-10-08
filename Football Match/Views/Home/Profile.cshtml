@@ -441,7 +441,14 @@
             <img class="cover-img" src="@Model.CoverPhotoPath" alt="غلاف" />
         }
         <div class="cover-overlay"></div>
-        <a href="/Home/Room" class="back-btn-float"><i class="fas fa-arrow-right"></i> الغرفة</a>
+        <div style="position:absolute;top:14px;right:14px;display:flex;gap:8px;z-index:5;">
+            @if (isAdminUser)
+            {
+                <a href="/Home/ExitAdmin" class="back-btn-float" style="position:static;background:rgba(16,185,129,0.3);border-color:rgba(16,185,129,0.5);color:#6ee7b7;"><i class="fas fa-user-check"></i> حسابي</a>
+                <a href="/Home/Admin" class="back-btn-float" style="position:static;background:rgba(139,92,246,0.35);border-color:rgba(139,92,246,0.6);color:#c4b5fd;"><i class="fas fa-cog"></i> الأدمن</a>
+            }
+            <a href="/Home/Room" class="back-btn-float" style="position:static;"><i class="fas fa-arrow-right"></i> الغرفة</a>
+        </div>
         @if (isOwn)
         {
             <label for="coverInput" style="position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:5px 10px;font-size:0.75rem;cursor:pointer;z-index:3;color:rgba(255,255,255,0.85);backdrop-filter:blur(6px);">
