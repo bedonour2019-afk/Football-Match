@@ -1,366 +1,1149 @@
 @{
     Layout = null;
 }
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>⚽ تأكيد حضور الماتش</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>⚽ تسجيل الدخول - كلاسيك ويندوز فيستا / إيرو</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        * { box-sizing: border-box; }
+        @@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Segoe+UI&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --aero-glass-bg: rgba(255, 255, 255, 0.25);
+            --aero-glass-border: rgba(255, 255, 255, 0.7);
+            --aero-glass-shadow: 0 20px 45px rgba(0, 60, 130, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(0, 110, 220, 0.25);
+            --aero-blue-glow: 0 0 25px rgba(0, 195, 255, 0.6);
+            --aero-btn-gradient: linear-gradient(180deg, #6ee5ff 0%, #1ea5f5 50%, #0080d7 51%, #09a2f6 100%);
+            --aero-btn-hover: linear-gradient(180deg, #91ecff 0%, #3bb6ff 50%, #088ee8 51%, #22b1ff 100%);
+        }
 
         body {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
             min-height: 100vh;
+            background: #0288d1 url('/assets/frutiger_aero_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #0c2340;
+            position: relative;
+            overflow-x: hidden;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-        }
-
-        .main-card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            width: 100%;
-            max-width: 500px;
-            padding: 40px 35px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
-        }
-
-        .logo-area {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo-area .ball-icon {
-            font-size: 56px;
-            animation: bounce 2s infinite;
-        }
-
-        /* تم مضاعفة الـ  هنا لمنع تداخل Razor مع CSS */
-        @@keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .logo-area h1 {
-            color: #fff;
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 10px 0 5px;
-        }
-
-        .logo-area p {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.9rem;
-        }
-
-        .form-control-custom {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
-            color: #fff;
-            padding: 14px 16px;
-            width: 100%;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .form-control-custom:focus {
-            border-color: #7c3aed;
-            background: rgba(124, 58, 237, 0.1);
-            box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
-        }
-
-        .form-control-custom::placeholder { color: rgba(255,255,255,0.35); }
-
-        .form-label-custom {
-            color: rgba(255,255,255,0.8);
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        .photo-upload-area {
-            display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 20px;
+            padding: 24px 16px;
         }
 
-        .photo-preview {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: rgba(124, 58, 237, 0.3);
-            border: 2px dashed rgba(124, 58, 237, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Floating Bubbles Effect */
+        .bubbles-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
             overflow: hidden;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: all 0.3s;
+            z-index: 1;
         }
 
-        .photo-preview:hover { border-color: #7c3aed; background: rgba(124, 58, 237, 0.4); }
+        .bubble {
+            position: absolute;
+            bottom: -80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85), rgba(180, 235, 255, 0.4) 60%, rgba(0, 150, 255, 0.25) 90%);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            animation: floatBubble 14s infinite ease-in;
+            opacity: 0.8;
+        }
 
-        .photo-preview img {
+        .bubble:nth-child(1) { left: 8%; width: 45px; height: 45px; animation-duration: 16s; animation-delay: 0s; }
+        .bubble:nth-child(2) { left: 22%; width: 70px; height: 70px; animation-duration: 20s; animation-delay: 3s; }
+        .bubble:nth-child(3) { left: 45%; width: 35px; height: 35px; animation-duration: 14s; animation-delay: 5s; }
+        .bubble:nth-child(4) { left: 68%; width: 55px; height: 55px; animation-duration: 18s; animation-delay: 2s; }
+        .bubble:nth-child(5) { left: 88%; width: 65px; height: 65px; animation-duration: 22s; animation-delay: 6s; }
+
+        @@keyframes floatBubble {
+            0% { transform: translateY(0) scale(0.8) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.85; }
+            90% { opacity: 0.85; }
+            100% { transform: translateY(-110vh) scale(1.15) rotate(40deg); opacity: 0; }
+        }
+
+        /* Desktop Grid Container */
+        .aero-desktop-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .aero-widgets-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .aero-center-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        /* Aero Window Common Styling */
+        .aero-window {
+            background: var(--aero-glass-bg);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1px solid var(--aero-glass-border);
+            border-radius: 20px;
+            box-shadow: var(--aero-glass-shadow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .aero-window::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 38%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-top-left-radius: 19px;
+            border-top-right-radius: 19px;
+            pointer-events: none;
+        }
+
+        .aero-window-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0b3464;
+            user-select: none;
+        }
+
+        .aero-window-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .aero-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .aero-ctrl-btn {
+            width: 19px;
+            height: 19px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: #032b57;
+            cursor: pointer;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+        .aero-ctrl-btn:hover { background: rgba(255, 255, 255, 0.8); }
+        .aero-ctrl-btn.close-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+        /* ===== WEATHER WIDGET (Top-Left) ===== */
+        .weather-widget {
+            width: 250px;
+            flex-shrink: 0;
+        }
+
+        .weather-body {
+            padding: 14px 16px;
+            text-align: center;
+        }
+
+        .weather-main-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .weather-sun-icon {
+            font-size: 2.8rem;
+            color: #ffb703;
+            filter: drop-shadow(0 0 15px rgba(255, 183, 3, 0.8));
+            animation: sunSpin 25s infinite linear;
+        }
+
+        @@keyframes sunSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .weather-temp-box {
+            text-align: right;
+        }
+
+        .weather-temp-num {
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1;
+            color: #032b57;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .weather-desc {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0a437c;
+        }
+
+        .weather-feels {
+            font-size: 0.7rem;
+            color: rgba(3, 43, 87, 0.7);
+        }
+
+        .forecast-strip {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 12px;
+            padding: 8px 10px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #032b57;
+        }
+
+        .forecast-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .forecast-icon {
+            color: #f59e0b;
+            font-size: 0.8rem;
+        }
+
+        /* ===== MUSIC PLAYER WIDGET (Top-Right) ===== */
+        .music-widget {
+            width: 320px;
+            flex-shrink: 0;
+        }
+
+        .music-body {
+            padding: 14px 16px;
+        }
+
+        .music-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .music-thumb {
+            width: 58px;
+            height: 58px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1.5px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 12px rgba(0, 80, 160, 0.3);
+            background: #0288d1;
+            flex-shrink: 0;
+        }
+
+        .music-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .music-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #032b57;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+        }
+
+        .music-artist {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0264ab;
+        }
+
+        .music-album {
+            font-size: 0.68rem;
+            color: rgba(3, 43, 87, 0.65);
+        }
+
+        /* Progress Bar */
+        .music-scrubber-box {
+            margin-bottom: 10px;
+        }
+
+        .music-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.45);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
+
+        .music-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #0288d1;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 6px rgba(2, 136, 209, 0.8);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .music-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .music-times {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #032b57;
+            margin-top: 3px;
+            font-family: Consolas, monospace;
+        }
+
+        /* Player Controls */
+        .music-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+        }
+
+        .music-ctrl-btn {
+            background: none;
+            border: none;
+            color: #033c77;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            padding: 4px 6px;
+        }
+        .music-ctrl-btn:hover { color: #0288d1; transform: scale(1.1); }
+
+        .play-pause-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--aero-btn-gradient);
+            border: 1.5px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 12px rgba(0, 136, 209, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .play-pause-btn:hover {
+            background: var(--aero-btn-hover);
+            transform: scale(1.08);
+            box-shadow: 0 6px 18px rgba(0, 136, 209, 0.7);
+        }
+
+        /* ===== CLOCK & DATE WIDGET (Middle-Right on Desktop) ===== */
+        .clock-widget {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 180px;
+            text-align: center;
+            padding: 16px 14px;
+            display: none;
+        }
+
+        @@media (min-width: 992px) {
+            .clock-widget { display: block; }
+        }
+
+        .clock-earth-icon {
+            font-size: 2.2rem;
+            color: #0288d1;
+            filter: drop-shadow(0 0 10px rgba(2, 136, 209, 0.6));
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .clock-time-text {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: #032b57;
+            line-height: 1.1;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+        }
+
+        .clock-date-text {
+            font-size: 0.74rem;
+            color: rgba(3, 43, 87, 0.8);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .clock-eco-badge {
+            margin-top: 8px;
+            font-size: 0.66rem;
+            color: #047857;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: rgba(16, 185, 129, 0.15);
+            border-radius: 8px;
+            padding: 3px 6px;
+        }
+
+        /* ===== MAIN WELCOME LOGIN / REGISTRATION CARD ===== */
+        .welcome-card {
+            width: 100%;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        .welcome-body {
+            padding: 24px 26px 20px;
+            text-align: center;
+        }
+
+        /* User Avatar Circle */
+        .welcome-avatar-wrap {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .welcome-avatar {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), rgba(180, 230, 255, 0.8) 60%, rgba(3, 169, 244, 0.7) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 24px rgba(0, 110, 220, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            overflow: hidden;
+            transition: all 0.25s;
+        }
+        .welcome-avatar:hover {
+            transform: scale(1.04);
+            box-shadow: 0 10px 28px rgba(0, 150, 255, 0.6);
+        }
+
+        .welcome-avatar i {
+            font-size: 2.8rem;
+            color: #0264ab;
+        }
+
+        .welcome-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .photo-preview .photo-icon {
-            color: rgba(124, 58, 237, 0.8);
-            font-size: 1.5rem;
+        .avatar-upload-hint {
+            font-size: 0.72rem;
+            color: #0264ab;
+            font-weight: 700;
+            margin-top: 4px;
         }
 
-        .photo-upload-info h6 {
-            color: #fff;
-            font-size: 0.9rem;
-            margin: 0 0 4px;
+        .welcome-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #032b57;
+            margin-bottom: 2px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
         }
 
-        .photo-upload-info p {
-            color: rgba(255,255,255,0.45);
-            font-size: 0.75rem;
-            margin: 0;
+        .welcome-subtitle {
+            font-size: 0.84rem;
+            color: rgba(3, 43, 87, 0.75);
+            font-weight: 600;
+            margin-bottom: 18px;
         }
 
-        .status-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        /* Aero Input Fields */
+        .aero-input-group {
+            position: relative;
+            margin-bottom: 12px;
+            text-align: right;
+        }
 
-        .status-option {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 18px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 14px;
+        .aero-input-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #0369a1;
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .aero-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1.5px solid rgba(255, 255, 255, 0.85);
+            border-radius: 12px;
+            padding: 10px 40px 10px 14px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #032b57;
+            outline: none;
+            transition: all 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0, 50, 100, 0.08), 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+        .aero-input:focus {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: #00b4d8;
+            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.35), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .aero-input::placeholder {
+            color: rgba(3, 50, 95, 0.45);
+            font-weight: 500;
+        }
+
+        .pw-toggle-btn {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(3, 50, 95, 0.5);
             cursor: pointer;
-            transition: all 0.25s;
-            background: rgba(255,255,255,0.03);
+            padding: 4px;
+            font-size: 0.9rem;
+            transition: color 0.15s;
+        }
+        .pw-toggle-btn:hover { color: #0288d1; }
+
+        /* Status Options Strip */
+        .status-bubbles-row {
+            display: flex;
+            gap: 8px;
+            margin: 14px 0 12px;
+        }
+
+        .status-bubble-btn {
+            flex: 1;
+            padding: 9px 6px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1.5px solid rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #032b57;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
             user-select: none;
         }
-
-        .status-option:hover {
-            background: rgba(255,255,255,0.07);
-            border-color: rgba(255,255,255,0.25);
+        .status-bubble-btn:hover {
+            background: rgba(255, 255, 255, 0.65);
+            transform: translateY(-2px);
         }
 
-        .status-option input[type="radio"] { display: none; }
+        .status-bubble-btn.selected-going {
+            background: linear-gradient(180deg, rgba(34, 197, 94, 0.35), rgba(34, 197, 94, 0.65));
+            border-color: #22c55e;
+            color: #064e3b;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+        .status-bubble-btn.selected-maybe {
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.35), rgba(245, 158, 11, 0.65));
+            border-color: #f59e0b;
+            color: #78350f;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+        }
+        .status-bubble-btn.selected-notgoing {
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.65));
+            border-color: #ef4444;
+            color: #7f1d1d;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
 
-        .status-option.selected-going { border-color: #22c55e; background: rgba(34,197,94,0.12); }
-        .status-option.selected-notgoing { border-color: #ef4444; background: rgba(239,68,68,0.12); }
-        .status-option.selected-maybe { border-color: #f59e0b; background: rgba(245,158,11,0.12); }
-
-        .status-icon-text { display: flex; align-items: center; gap: 10px; }
-        .status-icon-text .icon { font-size: 1.4rem; }
-        .status-icon-text .label { color: #fff; font-weight: 700; font-size: 1rem; }
-
-        .check-circle {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.25);
+        /* Sign In Main Button */
+        .aero-btn-signin {
+            width: 100%;
+            padding: 13px;
+            background: var(--aero-btn-gradient);
+            border: 2px solid rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            color: #fff;
+            font-size: 1.08rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 8px 24px rgba(0, 110, 220, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+            text-shadow: 0 1px 2px rgba(0, 60, 120, 0.6);
+        }
+        .aero-btn-signin:hover {
+            background: var(--aero-btn-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 130, 255, 0.55);
+        }
+
+        /* Extra Links Bar */
+        .welcome-links-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #034887;
+        }
+
+        .welcome-links-row a {
+            color: #0264ab;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .welcome-links-row a:hover { color: #0288d1; text-decoration: underline; }
+
+        /* Window Bottom Taskbar Icons (Options / Settings / Shut Down) */
+        .aero-bottom-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            padding-top: 16px;
+            margin-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.35);
+        }
+
+        .aero-bottom-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #033c77;
+            text-decoration: none;
+            cursor: pointer;
             transition: all 0.2s;
         }
-
-        .status-option.selected-going .check-circle { border-color: #22c55e; background: #22c55e; }
-        .status-option.selected-notgoing .check-circle { border-color: #ef4444; background: #ef4444; }
-        .status-option.selected-maybe .check-circle { border-color: #f59e0b; background: #f59e0b; }
-
-        .check-circle i { color: #fff; font-size: 0.75rem; display: none; }
-        .status-option[class*="selected-"] .check-circle i { display: block; }
-
-        .btn-submit {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
-            border: none;
-            border-radius: 14px;
-            color: #fff;
-            font-size: 1.05rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 8px;
-        }
-
-        .btn-submit:hover {
+        .aero-bottom-item:hover {
+            color: #0288d1;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+        }
+        .aero-bottom-item i {
+            font-size: 1.15rem;
         }
 
-        .admin-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .admin-link a {
-            color: rgba(255,255,255,0.35);
-            font-size: 0.8rem;
-            text-decoration: none;
-        }
-
-        .info-badge {
-            background: rgba(124, 58, 237, 0.15);
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            border-radius: 10px;
-            padding: 10px 14px;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.82rem;
-            margin-bottom: 22px;
+        /* Music Autoplay Notification Toast */
+        .autoplay-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 10px 18px;
+            box-shadow: 0 12px 30px rgba(0, 70, 150, 0.3);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #032b57;
+            z-index: 1000;
+            cursor: pointer;
+            animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .section-label {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+        @@keyframes bounceIn {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Mobile Adjustments */
+        @@media (max-width: 768px) {
+            .aero-widgets-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .weather-widget, .music-widget {
+                width: 100%;
+            }
+            .welcome-card {
+                max-width: 100%;
+            }
+            body {
+                padding: 14px 10px 40px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="main-card">
-        <div class="logo-area">
-            <div class="ball-icon">⚽</div>
-            <h1>تأكيد الحضور</h1>
-            <p>سجّل موقفك وانضم للغرفة مع الشباب</p>
+
+    <!-- Floating Water Bubbles -->
+    <div class="bubbles-container">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+
+    <!-- Hidden HTML5 Audio Element playing user's uploaded track -->
+    <audio id="bgMusic" src="/assets/welcome_music.mp3" preload="auto" loop></audio>
+
+    <div class="aero-desktop-wrapper">
+
+        <!-- Top Widgets Row (Weather on Left, Music Player on Right) -->
+        <div class="aero-widgets-top">
+
+            <!-- 1. WEATHER WIDGET (Top-Left) -->
+            <div class="aero-window weather-widget">
+                <div class="aero-window-header">
+                    <div class="aero-window-title">
+                        <i class="fas fa-sun" style="color:#ffb703;"></i>
+                        <span>Weather</span>
+                    </div>
+                    <div class="aero-controls">
+                        <button type="button" class="aero-ctrl-btn" title="تصغير">─</button>
+                        <button type="button" class="aero-ctrl-btn close-btn" title="إغلاق">✕</button>
+                    </div>
+                </div>
+                <div class="weather-body">
+                    <div class="weather-main-row">
+                        <i class="fas fa-sun weather-sun-icon"></i>
+                        <div class="weather-temp-box">
+                            <div class="weather-temp-num" id="weatherTemp">24°</div>
+                            <div class="weather-desc" id="weatherDesc">Sunny</div>
+                            <div class="weather-feels" id="weatherFeels">Feels like 24°</div>
+                        </div>
+                    </div>
+                    <div class="forecast-strip">
+                        <div class="forecast-day">
+                            <span>Mon</span>
+                            <i class="fas fa-sun forecast-icon"></i>
+                            <span>24°/18°</span>
+                        </div>
+                        <div class="forecast-day">
+                            <span>Tue</span>
+                            <i class="fas fa-sun forecast-icon"></i>
+                            <span>25°/19°</span>
+                        </div>
+                        <div class="forecast-day">
+                            <span>Wed</span>
+                            <i class="fas fa-sun forecast-icon"></i>
+                            <span>26°/19°</span>
+                        </div>
+                        <div class="forecast-day">
+                            <span>Thu</span>
+                            <i class="fas fa-sun forecast-icon"></i>
+                            <span>25°/18°</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. MUSIC PLAYER WIDGET (Top-Right) -->
+            <div class="aero-window music-widget">
+                <div class="aero-window-header">
+                    <div class="aero-window-title">
+                        <i class="fas fa-music" style="color:#0288d1;"></i>
+                        <span>Now Playing</span>
+                    </div>
+                    <div class="aero-controls">
+                        <button type="button" class="aero-ctrl-btn" title="تصغير">─</button>
+                        <button type="button" class="aero-ctrl-btn close-btn" title="إغلاق">✕</button>
+                    </div>
+                </div>
+                <div class="music-body">
+                    <div class="music-meta-row">
+                        <img src="/assets/frutiger_aero_bg.jpg" class="music-thumb" alt="Album Art" />
+                        <div class="music-info">
+                            <div class="music-title">Ocean Breeze</div>
+                            <div class="music-artist">Clear Skies</div>
+                            <div class="music-album">A Brighter Tomorrow</div>
+                        </div>
+                    </div>
+
+                    <!-- Scrubber Timeline -->
+                    <div class="music-scrubber-box">
+                        <input type="range" class="music-slider" id="musicScrubber" value="0" min="0" max="100" />
+                        <div class="music-times">
+                            <span id="currentTime">00:00</span>
+                            <span id="totalDuration">02:05</span>
+                        </div>
+                    </div>
+
+                    <!-- Controls: Shuffle, Prev, Play/Pause, Next, Volume -->
+                    <div class="music-controls">
+                        <button type="button" class="music-ctrl-btn" title="عشوائي"><i class="fas fa-random"></i></button>
+                        <button type="button" class="music-ctrl-btn" id="btnPrev" title="السابق"><i class="fas fa-step-backward"></i></button>
+                        <button type="button" class="play-pause-btn" id="btnPlayPause" title="تشغيل / إيقاف">
+                            <i class="fas fa-play" id="playIcon"></i>
+                        </button>
+                        <button type="button" class="music-ctrl-btn" id="btnNext" title="التالي"><i class="fas fa-step-forward"></i></button>
+                        <button type="button" class="music-ctrl-btn" id="btnVolume" title="كتم / تشغيل الصوت"><i class="fas fa-volume-up" id="volIcon"></i></button>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;display:flex;align-items:center;gap:8px;">
-                <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
-            </div>
-        }
+        <!-- Center Area: Clock on the side & Welcome Window in the center -->
+        <div class="aero-center-area">
 
-        <div class="info-badge">
-            <i class="fas fa-info-circle" style="color:#a855f7"></i>
-            رقم التليفون هو حسابك، تقدر تعدّل موقفك في أي وقت.
+            <!-- 3. CLOCK & DATE WIDGET (Right on Desktop) -->
+            <div class="aero-window clock-widget">
+                <i class="fas fa-globe-americas clock-earth-icon"></i>
+                <div class="clock-time-text" id="liveClockTime">10:24 AM</div>
+                <div class="clock-date-text" id="liveClockDate">Saturday, May 15, 2004</div>
+                <div class="clock-eco-badge">
+                    <i class="fas fa-leaf"></i>
+                    <span>A Cleaner Tomorrow</span>
+                </div>
+            </div>
+
+            <!-- 4. CENTER MAIN WELCOME REGISTRATION WINDOW -->
+            <div class="aero-window welcome-card">
+                <div class="aero-window-header">
+                    <div class="aero-window-title">
+                        <i class="fas fa-futbol" style="color:#0288d1;"></i>
+                        <span>Match Registration • تأكيد الحضور</span>
+                    </div>
+                    <div class="aero-controls">
+                        <button type="button" class="aero-ctrl-btn" title="تصغير">─</button>
+                        <button type="button" class="aero-ctrl-btn close-btn" title="إغلاق">✕</button>
+                    </div>
+                </div>
+
+                <div class="welcome-body">
+                    <!-- Avatar Area -->
+                    <div class="welcome-avatar-wrap" onclick="document.getElementById('profilePhoto').click()">
+                        <div class="welcome-avatar" id="avatarBox">
+                            <i class="fas fa-user" id="defaultUserIcon"></i>
+                            <img id="avatarImg" src="" style="display:none;" />
+                        </div>
+                        <div class="avatar-upload-hint"><i class="fas fa-camera me-1"></i>اختر صورة شخصية</div>
+                    </div>
+
+                    <h1 class="welcome-title">Welcome</h1>
+                    <p class="welcome-subtitle">Sign in to continue • سجّل موقفك وانضم للغرفة مع الشباب</p>
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.5);color:#991b1b;border-radius:12px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;font-weight:700;">
+                            <i class="fas fa-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <form asp-controller="Home" asp-action="Submit" method="post" enctype="multipart/form-data" id="loginForm">
+                        @Html.AntiForgeryToken()
+                        <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" style="display:none;" onchange="previewPhoto(this)" />
+
+                        <!-- Phone / Username -->
+                        <div class="aero-input-group">
+                            <i class="fas fa-phone-alt aero-input-icon"></i>
+                            <input type="tel" name="PhoneNumber" class="aero-input" placeholder="رقم الموبايل (01xxxxxxxxx)" required autocomplete="tel" />
+                        </div>
+
+                        <!-- Password -->
+                        <div class="aero-input-group">
+                            <i class="fas fa-lock aero-input-icon"></i>
+                            <input type="password" id="userPasswordInput" name="Password" class="aero-input" style="padding-left:42px;" placeholder="كلمة السر..." required minlength="4" autocomplete="current-password" />
+                            <button type="button" class="pw-toggle-btn" onclick="togglePasswordVisibility()" title="إظهار/إخفاء">
+                                <i class="fas fa-eye" id="pwIcon"></i>
+                            </button>
+                        </div>
+
+                        <!-- Name -->
+                        <div class="aero-input-group">
+                            <i class="fas fa-user-tag aero-input-icon"></i>
+                            <input type="text" name="FriendName" class="aero-input" placeholder="اسمك بالكامل..." required autocomplete="name" />
+                        </div>
+
+                        <!-- Status Selection (Pill Buttons) -->
+                        <div style="text-align:right;margin:12px 0 4px;">
+                            <label style="font-size:0.78rem;font-weight:700;color:#033c77;">موقفك من الماتش:</label>
+                            <div class="status-bubbles-row">
+                                <div class="status-bubble-btn selected-going" onclick="pickStatus('جاي أكيد', this, 'selected-going')">
+                                    <span style="font-size:1.1rem;">✅</span>
+                                    <span>جاي أكيد</span>
+                                </div>
+                                <div class="status-bubble-btn" onclick="pickStatus('احتمال أجي', this, 'selected-maybe')">
+                                    <span style="font-size:1.1rem;">❓</span>
+                                    <span>احتمال أجي</span>
+                                </div>
+                                <div class="status-bubble-btn" onclick="pickStatus('مش جاي', this, 'selected-notgoing')">
+                                    <span style="font-size:1.1rem;">❌</span>
+                                    <span>مش جاي</span>
+                                </div>
+                            </div>
+                            <input type="hidden" name="Status" id="selectedStatusInput" value="جاي أكيد" />
+                        </div>
+
+                        <!-- Note -->
+                        <div class="aero-input-group">
+                            <i class="fas fa-comment-dots aero-input-icon"></i>
+                            <input type="text" name="Note" class="aero-input" placeholder="ملاحظة إضافية (اختياري)..." />
+                        </div>
+
+                        <!-- Submit Button (Glossy Cyan Aero Pill) -->
+                        <button type="submit" class="aero-btn-signin" id="submitBtn">
+                            <span>Sign In • تأكيد الدخول</span>
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                    </form>
+
+                    <!-- Links Row -->
+                    <div class="welcome-links-row">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" checked style="accent-color:#0288d1;" />
+                            <span>تذكرني</span>
+                        </label>
+                        <a asp-controller="Home" asp-action="Login">دخول الأدمن 🔐</a>
+                    </div>
+
+                    <!-- Bottom Bar (Options, Settings, Shut down) -->
+                    <div class="aero-bottom-bar">
+                        <div class="aero-bottom-item" onclick="toggleMusicWidget()">
+                            <i class="fas fa-globe"></i>
+                            <span>الموسيقى</span>
+                        </div>
+                        <a asp-controller="Home" asp-action="Login" class="aero-bottom-item">
+                            <i class="fas fa-cog"></i>
+                            <span>الأدمن</span>
+                        </a>
+                        <a href="/Home/Room" class="aero-bottom-item">
+                            <i class="fas fa-power-off"></i>
+                            <span>الغرفة</span>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
 
-        <form asp-controller="Home" asp-action="Submit" method="post" enctype="multipart/form-data">
-            <div class="photo-upload-area">
-                <div class="photo-preview" onclick="document.getElementById('profilePhoto').click()">
-                    <div class="photo-icon" id="photoIcon"><i class="fas fa-camera"></i></div>
-                    <img id="photoPreviewImg" src="" alt="" style="display:none;" />
-                </div>
-                <div class="photo-upload-info">
-                    <h6>صورة شخصية <span style="color:rgba(255,255,255,0.35);font-size:0.75rem;">(اختياري)</span></h6>
-                    <p>اضغط على الدايرة لاختيار صورتك</p>
-                </div>
-                <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" style="display:none;" onchange="previewPhoto(this)" />
-            </div>
+    </div>
 
-            <div class="mb-3">
-                <label class="form-label-custom">📱 رقم الموبايل</label>
-                <input type="tel" name="PhoneNumber" class="form-control-custom" placeholder="01xxxxxxxxx" required />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label-custom">🔒 كلمة السر</label>
-                <div style="position:relative;">
-                    <input type="password" id="userPasswordInput" name="Password" class="form-control-custom" style="padding-left:44px;" placeholder="اختار كلمة سر لحسابك..." required minlength="4" autocomplete="new-password" />
-                    <button type="button" onclick="toggleIndexPassword()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.45);cursor:pointer;font-size:0.95rem;padding:4px;" title="إظهار/إخفاء">
-                        <i class="fas fa-eye" id="indexPwIcon"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label-custom">👤 اسمك بالكامل</label>
-                <input type="text" name="FriendName" class="form-control-custom" placeholder="ادخل اسمك هنا..." required />
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <p class="section-label">جايب ولا لا؟</p>
-                <div class="status-options">
-                    <label class="status-option selected-going" onclick="selectStatus(this, 'selected-going')">
-                        <div class="status-icon-text">
-                            <span class="icon">✅</span>
-                            <span class="label">جاي أكيد</span>
-                        </div>
-                        <div class="check-circle"><i class="fas fa-check"></i></div>
-                        <input type="radio" name="Status" value="جاي أكيد" checked />
-                    </label>
-
-                    <label class="status-option" onclick="selectStatus(this, 'selected-notgoing')">
-                        <div class="status-icon-text">
-                            <span class="icon">❌</span>
-                            <span class="label">مش جاي</span>
-                        </div>
-                        <div class="check-circle"><i class="fas fa-check"></i></div>
-                        <input type="radio" name="Status" value="مش جاي" />
-                    </label>
-
-                    <label class="status-option" onclick="selectStatus(this, 'selected-maybe')">
-                        <div class="status-icon-text">
-                            <span class="icon">❓</span>
-                            <span class="label">احتمال أجي</span>
-                        </div>
-                        <div class="check-circle"><i class="fas fa-check"></i></div>
-                        <input type="radio" name="Status" value="احتمال أجي" />
-                    </label>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label-custom">💬 ملاحظة <span style="color:rgba(255,255,255,0.3);font-weight:400;">(اختياري)</span></label>
-                <input type="text" name="Note" class="form-control-custom" placeholder="مثلاً: هتأخر 10 دقايق..." />
-            </div>
-
-            <button type="submit" class="btn-submit">
-                <i class="fas fa-paper-plane me-2"></i> تأكيد وانضم للغرفة
-            </button>
-        </form>
-
-        <div class="admin-link">
-            <a asp-controller="Home" asp-action="Login"><i class="fas fa-lock me-1"></i>دخول الأدمن</a>
-        </div>
+    <!-- Autoplay Prompt Toast (if browser blocked sound autoplay initially) -->
+    <div class="autoplay-toast" id="autoplayPrompt" onclick="startMusicFromToast()" style="display:none;">
+        <i class="fas fa-volume-up fa-lg" style="color:#0288d1;"></i>
+        <span>اضغط هنا لتشغيل الموسيقى 🎵</span>
     </div>
 
     <script>
-        function selectStatus(el, cls) {
-            document.querySelectorAll('.status-option').forEach(o => {
-                o.classList.remove('selected-going', 'selected-notgoing', 'selected-maybe');
-            });
-            el.classList.add(cls);
-            el.querySelector('input[type="radio"]').checked = true;
+        // ===== MUSIC PLAYER LOGIC =====
+        const audio = document.getElementById("bgMusic");
+        const btnPlayPause = document.getElementById("btnPlayPause");
+        const playIcon = document.getElementById("playIcon");
+        const scrubber = document.getElementById("musicScrubber");
+        const currentTimeEl = document.getElementById("currentTime");
+        const totalDurationEl = document.getElementById("totalDuration");
+        const btnVolume = document.getElementById("btnVolume");
+        const volIcon = document.getElementById("volIcon");
+        const autoplayToast = document.getElementById("autoplayPrompt");
+
+        let isPlaying = false;
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "00:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
         }
 
-        function previewPhoto(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('photoIcon').style.display = 'none';
-                    const img = document.getElementById('photoPreviewImg');
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
+        function playMusic() {
+            audio.play().then(() => {
+                isPlaying = true;
+                playIcon.className = "fas fa-pause";
+                if (autoplayToast) autoplayToast.style.display = "none";
+            }).catch(err => {
+                console.log("Autoplay waiting for interaction:", err);
+                if (autoplayToast) autoplayToast.style.display = "flex";
+            });
         }
-        function toggleIndexPassword() {
+
+        function pauseMusic() {
+            audio.pause();
+            isPlaying = false;
+            playIcon.className = "fas fa-play";
+        }
+
+        btnPlayPause.addEventListener("click", () => {
+            if (isPlaying) {
+                pauseMusic();
+            } else {
+                playMusic();
+            }
+        });
+
+        function startMusicFromToast() {
+            playMusic();
+            if (autoplayToast) autoplayToast.style.display = "none";
+        }
+
+        // Auto-play attempt on load + fallback on first user interaction
+        window.addEventListener("DOMContentLoaded", () => {
+            playMusic();
+
+            const startOnInteraction = () => {
+                if (!isPlaying) {
+                    playMusic();
+                }
+                document.removeEventListener("click", startOnInteraction);
+                document.removeEventListener("touchstart", startOnInteraction);
+                document.removeEventListener("keydown", startOnInteraction);
+            };
+
+            document.addEventListener("click", startOnInteraction);
+            document.addEventListener("touchstart", startOnInteraction);
+            document.addEventListener("keydown", startOnInteraction);
+        });
+
+        // Time Updates
+        audio.addEventListener("timeupdate", () => {
+            if (audio.duration) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                scrubber.value = percent;
+                currentTimeEl.textContent = formatTime(audio.currentTime);
+                totalDurationEl.textContent = formatTime(audio.duration);
+            }
+        });
+
+        audio.addEventListener("loadedmetadata", () => {
+            totalDurationEl.textContent = formatTime(audio.duration);
+        });
+
+        // Scrubber Seeking
+        scrubber.addEventListener("input", () => {
+            if (audio.duration) {
+                const seekTo = (scrubber.value / 100) * audio.duration;
+                audio.currentTime = seekTo;
+            }
+        });
+
+        // Volume Toggle
+        btnVolume.addEventListener("click", () => {
+            audio.muted = !audio.muted;
+            if (audio.muted) {
+                volIcon.className = "fas fa-volume-mute";
+            } else {
+                volIcon.className = "fas fa-volume-up";
+            }
+        });
+
+        function toggleMusicWidget() {
+            if (isPlaying) pauseMusic();
+            else playMusic();
+        }
+
+        // ===== WEATHER & CLOCK DYNAMIC UPDATES =====
+        function updateLiveClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const timeStr = `${hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+            
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const dateStr = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+            const clockEl = document.getElementById("liveClockTime");
+            const dateEl = document.getElementById("liveClockDate");
+            if (clockEl) clockEl.textContent = timeStr;
+            if (dateEl) dateEl.textContent = dateStr;
+        }
+
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+
+        // Optional Live Weather fetch via free Open-Meteo API
+        fetch("https://api.open-meteo.com/v1/forecast?latitude=30.0444&longitude=31.2357&current_weather=true")
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.current_weather) {
+                    const temp = Math.round(data.current_weather.temperature);
+                    const tempEl = document.getElementById("weatherTemp");
+                    const feelsEl = document.getElementById("weatherFeels");
+                    if (tempEl) tempEl.textContent = temp + "°";
+                    if (feelsEl) feelsEl.textContent = `Feels like ${temp}°`;
+                }
+            })
+            .catch(() => { /* Defaults to iconic 24° Sunny */ });
+
+        // ===== FORM & UI HELPERS =====
+        function pickStatus(val, el, cls) {
+            document.querySelectorAll(".status-bubble-btn").forEach(b => {
+                b.classList.remove("selected-going", "selected-maybe", "selected-notgoing");
+            });
+            el.classList.add(cls);
+            document.getElementById("selectedStatusInput").value = val;
+        }
+
+        function togglePasswordVisibility() {
             const input = document.getElementById("userPasswordInput");
-            const icon = document.getElementById("indexPwIcon");
+            const icon = document.getElementById("pwIcon");
             if (input.type === "password") {
                 input.type = "text";
                 icon.className = "fas fa-eye-slash";
@@ -370,11 +1153,25 @@
             }
         }
 
-        document.querySelector('form').addEventListener('submit', function() {
-            const btn = this.querySelector('.btn-submit');
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const userIcon = document.getElementById("defaultUserIcon");
+                    const img = document.getElementById("avatarImg");
+                    userIcon.style.display = "none";
+                    img.src = e.target.result;
+                    img.style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.getElementById("loginForm").addEventListener("submit", function () {
+            const btn = document.getElementById("submitBtn");
             if (btn) {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري التأكيد...';
-                btn.style.opacity = '0.75';
+                btn.innerHTML = '<span>جاري الدخول...</span> <i class="fas fa-spinner fa-spin"></i>';
+                btn.style.opacity = '0.8';
             }
         });
     </script>
